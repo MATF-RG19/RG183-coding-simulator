@@ -8,6 +8,13 @@ static void on_display();
 static void on_reshape(int width, int height);
 void draw_girl(void);
 void draw_boy(void);
+void draw_floor(int num_tiles);
+
+/* used to keep track of the light source so a small cube acting as a 
+   lightbulb can be drawn to more easily see where the light is coming from */
+static int light_x = 3;
+static int light_y = 4;
+static int light_z = -5;
 
 int main(int argc, char **argv){
     glutInit(&argc, argv);
@@ -27,7 +34,7 @@ int main(int argc, char **argv){
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
 
-    float light_position[] = {-1, 3, 2, 1};
+    float light_position[] = {light_x,light_y,light_z,1};
     float light_ambient[] = {.3f, .3f, .3f, 1};
     float light_diffuse[] = {.7f, .7f, .7f, 1};
     float light_specular[] = {.7f, .7f, .7f, 1};
@@ -48,7 +55,7 @@ void on_reshape(int width, int height) {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
 
-    gluPerspective(30, (float) width/height, 1, 20);
+    gluPerspective(30, (float) width/height, 1, 60);
 }
 
 void on_display() {
@@ -57,15 +64,31 @@ void on_display() {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     
-    gluLookAt(7, 6, 12,
+    gluLookAt(15, 13, 18,
               0, 0, 0,
               0, 1, 0);
-
+    
+    /*
+    gluLookAt(0, 0, 15,
+              0, 0, 0,
+              0, 1, 0);
+	*/
+	/*
+	gluLookAt(-15, 0, 0,
+              0, 0, 0,
+              0, 1, 0);
+    */
+    
     glPushMatrix();
-        /* Testing boy/girl */
+    	glTranslatef(light_x, light_y, light_z);
+    	glutSolidCube(0.2);
+    glPopMatrix();
         draw_girl();
+        glPushMatrix();
         glTranslatef(3,0,0);
         draw_boy();
+        glPopMatrix();
+        draw_floor(1);
     glPopMatrix();
 
     glutSwapBuffers();
@@ -73,9 +96,15 @@ void on_display() {
 
 void draw_girl()
 {
+	glPushAttrib(GL_LIGHTING_BIT);
+	
+	GLfloat mat_ambient[] ={ 0.7, 0.0, 0.2, 1.0f };
+	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
+
 	/* body */
     glPushMatrix();
-    	glTranslatef(0, 0.4, 0.0);
+    	glTranslatef(0, 0.6, 0.0);
+    	glRotatef(25,0,1,0);
     	glRotatef(90,0,0,1);
     	glScalef(1.3,1.3,1.3);
     	glutSolidTetrahedron();
@@ -99,42 +128,77 @@ void draw_girl()
     	glScalef(0.2,0.2,0.2);
     	glutSolidSphere(1, 16, 16);
     glPopMatrix();
+    
+    glPopAttrib();
 }
 
 void draw_boy()
 {
+	glPushAttrib(GL_LIGHTING_BIT);
+
+	GLfloat mat_ambient[] ={ 0.05, 0.0, 1, 1.0f };
+	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
+
 	/* body */
 	glPushMatrix();
-    	glTranslatef(0,1,0);
+    	glTranslatef(0,1.3,0);
     	glScalef(1.3,1.2,1);
     	glutSolidCube(1);
     glPopMatrix();
     
     /* legs */
     glPushMatrix();
-    	glTranslatef(0.34,0.08,0);
+    	/* glTranslatef(0.34,0.08,0); */
+    	glTranslatef(-0.34,0.5,0);
     	glScalef(0.6,0.6,1);
     	glutSolidCube(1);
     glPopMatrix();
     
     glPushMatrix();
-    	glTranslatef(-0.34,0.08,0);
+    	glTranslatef(0.34,0.5,0);
     	glScalef(0.6,0.6,1);
     	glutSolidCube(1);
     glPopMatrix();
     
     /* head */
     glPushMatrix();
-    	glTranslatef(0,2.1,0);
+    	glTranslatef(0,2.4,0);
     	glScalef(0.65,0.65,0.65);
     	glutSolidSphere(1, 16, 16);
     glPopMatrix();
     
     /* hair */
     glPushMatrix();
-    	glTranslatef(0,2.9, 0);
+    	glTranslatef(0,3.2, 0);
     	glScalef(0.2,0.2,0.2);
     	glutSolidSphere(1, 16, 16);
     glPopMatrix();
+    
+    glPopAttrib();
+}
+
+void draw_floor(int num_tiles)
+{
+	glTranslatef(-0.3,0,0);
+
+	glPushAttrib(GL_LIGHTING_BIT);
+
+	GLfloat mat_ambient[] ={ 1,1,1,1};
+	GLfloat mat_diffuse[] ={1,1,1,1 };
+	GLfloat mat_specular[] ={ 1,1,1, 0.922f};
+	GLfloat shine[] = { 11.264f };
+
+	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, shine);
+    
+	glPushMatrix();
+    	glTranslatef(0,0,0);
+    	glScalef(3.5,0.3,3.5);
+    	glutSolidCube(1);
+    glPopMatrix();
+    
+    glPopAttrib();
 }
 
