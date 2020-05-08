@@ -17,6 +17,8 @@ static int light_x = 3;
 static int light_y = 4;
 static int light_z = -5;
 
+float random_array[500];
+
 int main(int argc, char **argv){
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
@@ -46,6 +48,13 @@ int main(int argc, char **argv){
     glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
 	
 	srand(time(NULL));
+	
+	/* initializing carpet */
+	int i;
+	for (i = 0; i < 500; i++)
+	{
+		random_array[i] = (float) rand() / RAND_MAX;
+	}
 	
     glClearColor(0,0, 0, 0);
     glutMainLoop();
@@ -227,12 +236,13 @@ void draw_triangle_carpet()
 	
 	int x;
 	int z;
+	int index_of_random_array = 0;
 	
 	for(x = -40; x < 40; x = x + 4)
 	{
 		for(z = -40; z < 40; z = z + 4)
 		{
-			float random_position = (float) rand() / RAND_MAX;
+			float random_position = random_array[index_of_random_array++];
 			float position_z = z - random_position;
 			float position_x = x + random_position;
 			
