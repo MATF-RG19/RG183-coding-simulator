@@ -9,6 +9,7 @@ static void on_reshape(int width, int height);
 void draw_girl(void);
 void draw_boy(void);
 void draw_floor(int num_tiles);
+void draw_triangle_carpet(void);
 
 /* used to keep track of the light source so a small cube acting as a 
    lightbulb can be drawn to more easily see where the light is coming from */
@@ -43,8 +44,10 @@ int main(int argc, char **argv){
     glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
     glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
     glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
-
-    glClearColor(0.7, 0.7, 0.7, 0);
+	
+	srand(time(NULL));
+	
+    glClearColor(0,0, 0, 0);
     glutMainLoop();
 
     return 0;
@@ -89,6 +92,7 @@ void on_display() {
         draw_boy();
         glPopMatrix();
         draw_floor(1);
+        draw_triangle_carpet();
     glPopMatrix();
 
     glutSwapBuffers();
@@ -179,6 +183,8 @@ void draw_boy()
 
 void draw_floor(int num_tiles)
 {
+	float translate_by_z = 4;
+
 	glTranslatef(-0.3,0,0);
 
 	glPushAttrib(GL_LIGHTING_BIT);
@@ -199,6 +205,63 @@ void draw_floor(int num_tiles)
     	glutSolidCube(1);
     glPopMatrix();
     
+    glPushMatrix();
+    	glTranslatef(0,0, -translate_by_z);
+    	glScalef(3.5,0.3,3.5);
+    	glutSolidCube(1);
+    glPopMatrix();
+    
     glPopAttrib();
 }
+
+void draw_triangle_carpet()
+{
+	glPushAttrib(GL_LIGHTING_BIT);
+
+	/* GLfloat mat_ambient[] ={ 1, 0.0, 1, 1.0f }; */
+	GLfloat mat_ambient[] ={ 0.1, 1, 0.1, 1.0f };
+	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
+
+	glPushMatrix();
+	glScalef(0.5,0.5,0.5);
+	
+	int x;
+	int z;
+	
+	for(x = -40; x < 40; x = x + 4)
+	{
+		for(z = -40; z < 40; z = z + 4)
+		{
+			float random_position = (float) rand() / RAND_MAX;
+			float position_z = z - random_position;
+			float position_x = x + random_position;
+			
+			if (random_position < 0.5)
+			{
+				GLfloat mat_ambient[] ={ 0.1, 1, 0.1, 1.0f };
+				glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
+			}
+			else 
+			{
+				GLfloat mat_ambient[] ={ 1, 1, 0.3, 1.0f };
+				glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
+			}
+			
+			glPushMatrix();
+				glRotatef(90*random_position, 0, 1, 0);
+			
+				glBegin(GL_POLYGON);
+					glVertex3f(position_x,-0.4,position_z);
+					glVertex3f(position_x,-0.4, position_z - 0.7);
+					glVertex3f(position_x + 0.7,-0.4,position_z);
+				glEnd();
+			glPopMatrix();
+		}
+	}
+	
+	glPopMatrix();
+	
+	glPopAttrib();
+}
+    
 
