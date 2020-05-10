@@ -7,6 +7,8 @@
 #define TIMER_INTERVAL 1
 #define TIMER_ID 0
 
+#define PI 3.1415926535897
+
 static void on_display();
 static void on_reshape(int width, int height);
 void draw_girl(void);
@@ -35,6 +37,7 @@ int animation_ongoing = 0;
 int privremeni_brojac = 0;
 float z = 0;
 float x = 0;
+float y = 0;
 int previous_tile_z = 0;
 int previous_tile_x = 0;
 
@@ -133,6 +136,7 @@ void draw_girl()
 	
 	x = previous_tile_x*(-3.75);
 	z = previous_tile_z*(-3.75);
+	y = sin(animation_parameter * PI);
 	
 	if (pressed_a)
 		x += animation_parameter*(-3.75);
@@ -148,7 +152,7 @@ void draw_girl()
 
 	/* body */
 	glPushMatrix();
-		glTranslatef(x, 0.6, z);
+		glTranslatef(x, y + 0.6, z);
 		glRotatef(25,0,1,0);
 		glRotatef(90,0,0,1);
 		glScalef(1.3,1.3,1.3);
@@ -157,19 +161,19 @@ void draw_girl()
 	
 	/* head */
 	glPushMatrix();
-		glTranslatef(x,2.1, z);
+		glTranslatef(x,y + 2.1, z);
 		glScalef(0.65,0.65,0.65);
 		glutSolidSphere(1, 16, 16);
 	glPopMatrix();
 	
 	/* hair */
 	glPushMatrix();
-		glTranslatef(x + 0.6,2.5, z + 0.5);
+		glTranslatef(x + 0.6,y + 2.5, z + 0.5);
 		glScalef(0.2,0.2,0.2);
 		glutSolidSphere(1, 16, 16);
 	glPopMatrix();
 	glPushMatrix();
-		glTranslatef(x - 0.6,2.5, z + 0.5);
+		glTranslatef(x - 0.6,y +2.5, z + 0.5);
 		glScalef(0.2,0.2,0.2);
 		glutSolidSphere(1, 16, 16);
 	glPopMatrix();
@@ -183,6 +187,7 @@ void draw_boy()
 	
 	x = previous_tile_x*(-3.75);
 	z = previous_tile_z*(-3.75);
+	y = sin(animation_parameter * PI);
 	
 	if (pressed_a)
 		x += animation_parameter*(-3.75);
@@ -198,34 +203,34 @@ void draw_boy()
 
 	/* body */
 	glPushMatrix();
-    	glTranslatef(x,1.3,z);
+    	glTranslatef(x,y + 1.3,z);
     	glScalef(1.3,1.2,1);
     	glutSolidCube(1);
     glPopMatrix();
     
     /* legs */
     glPushMatrix();
-    	glTranslatef(x - 0.34,0.5,z);
+    	glTranslatef(x - 0.34,y + 0.5,z);
     	glScalef(0.6,0.6,1);
     	glutSolidCube(1);
     glPopMatrix();
     
     glPushMatrix();
-    	glTranslatef(x + 0.34,0.5,z);
+    	glTranslatef(x + 0.34,y + 0.5,z);
     	glScalef(0.6,0.6,1);
     	glutSolidCube(1);
     glPopMatrix();
     
     /* head */
     glPushMatrix();
-    	glTranslatef(x,2.4,z);
+    	glTranslatef(x,y +2.4,z);
     	glScalef(0.65,0.65,0.65);
     	glutSolidSphere(1, 16, 16);
     glPopMatrix();
     
     /* hair */
     glPushMatrix();
-    	glTranslatef(x,3.2, z);
+    	glTranslatef(x,y +3.2, z);
     	glScalef(0.2,0.2,0.2);
     	glutSolidSphere(1, 16, 16);
     glPopMatrix();
