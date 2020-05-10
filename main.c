@@ -4,12 +4,18 @@
 #include <time.h>
 #include <stdlib.h>
 
+#define TIMER_INTERVAL 1
+#define TIMER_ID 0
+
 static void on_display();
 static void on_reshape(int width, int height);
 void draw_girl(void);
 void draw_boy(void);
 void draw_floor(int num_tiles);
 void draw_triangle_carpet(void);
+void on_keyboard(unsigned char key, int x, int y);
+static void on_timer(int id);
+void change_key_pressed(char);
 
 /* used to keep track of the light source so a small cube acting as a 
    lightbulb can be drawn to more easily see where the light is coming from */
@@ -18,6 +24,19 @@ static int light_y = 4;
 static int light_z = -5;
 
 float random_array[500];
+float animation_parameter = 0;
+int animation_parameter_x = 0;
+int animation_parameter_z = 0;
+int pressed_a = 0;
+int pressed_w = 0;
+int pressed_s = 0;
+int pressed_d = 0;
+int animation_ongoing = 0;
+int privremeni_brojac = 0;
+float z = 0;
+float x = 0;
+int previous_tile_z = 0;
+int previous_tile_x = 0;
 
 int main(int argc, char **argv){
     glutInit(&argc, argv);
@@ -29,6 +48,7 @@ int main(int argc, char **argv){
 
     glutDisplayFunc(on_display);
     glutReshapeFunc(on_reshape);
+    glutKeyboardFunc(on_keyboard);
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_NORMALIZE);
@@ -76,7 +96,7 @@ void on_display() {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     
-    gluLookAt(15, 13, 18,
+    gluLookAt(18, 16, 22,
               0, 0, 0,
               0, 1, 0);
     
@@ -97,7 +117,7 @@ void on_display() {
     glPopMatrix();
         draw_girl();
         glPushMatrix();
-        glTranslatef(3,0,0);
+        glTranslatef(-3.75, 0, 0);
         draw_boy();
         glPopMatrix();
         draw_floor(1);
@@ -108,81 +128,104 @@ void on_display() {
 }
 
 void draw_girl()
-{
+{ 
 	glPushAttrib(GL_LIGHTING_BIT);
+	
+	x = previous_tile_x*(-3.75);
+	z = previous_tile_z*(-3.75);
+	
+	if (pressed_a)
+		x += animation_parameter*(-3.75);
+	if (pressed_w)
+		z += animation_parameter*(-3.75);
+	if (pressed_d)
+		x += animation_parameter*(3.75);
+	if(pressed_s)
+		z += animation_parameter*(3.75);
 	
 	GLfloat mat_ambient[] ={ 0.7, 0.0, 0.2, 1.0f };
 	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
 
 	/* body */
-    glPushMatrix();
-    	glTranslatef(0, 0.6, 0.0);
-    	glRotatef(25,0,1,0);
-    	glRotatef(90,0,0,1);
-    	glScalef(1.3,1.3,1.3);
-    	glutSolidTetrahedron();
-    glPopMatrix();
-    
-    /* head */
-    glPushMatrix();
-    	glTranslatef(0,2.1,0);
-    	glScalef(0.65,0.65,0.65);
-    	glutSolidSphere(1, 16, 16);
-    glPopMatrix();
-    
-    /* hair */
-    glPushMatrix();
-    	glTranslatef(0.6,2.5, 0.5);
-    	glScalef(0.2,0.2,0.2);
-    	glutSolidSphere(1, 16, 16);
-    glPopMatrix();
-    glPushMatrix();
-    	glTranslatef(-0.6,2.5, 0.5);
-    	glScalef(0.2,0.2,0.2);
-    	glutSolidSphere(1, 16, 16);
-    glPopMatrix();
-    
-    glPopAttrib();
+	glPushMatrix();
+		glTranslatef(x, 0.6, z);
+		glRotatef(25,0,1,0);
+		glRotatef(90,0,0,1);
+		glScalef(1.3,1.3,1.3);
+		glutSolidTetrahedron();
+	glPopMatrix();
+	
+	/* head */
+	glPushMatrix();
+		glTranslatef(x,2.1, z);
+		glScalef(0.65,0.65,0.65);
+		glutSolidSphere(1, 16, 16);
+	glPopMatrix();
+	
+	/* hair */
+	glPushMatrix();
+		glTranslatef(x + 0.6,2.5, z + 0.5);
+		glScalef(0.2,0.2,0.2);
+		glutSolidSphere(1, 16, 16);
+	glPopMatrix();
+	glPushMatrix();
+		glTranslatef(x - 0.6,2.5, z + 0.5);
+		glScalef(0.2,0.2,0.2);
+		glutSolidSphere(1, 16, 16);
+	glPopMatrix();
+	
+	glPopAttrib();
 }
 
 void draw_boy()
 {
 	glPushAttrib(GL_LIGHTING_BIT);
+	
+	x = previous_tile_x*(-3.75);
+	z = previous_tile_z*(-3.75);
+	
+	if (pressed_a)
+		x += animation_parameter*(-3.75);
+	if (pressed_w)
+		z += animation_parameter*(-3.75);
+	if (pressed_d)
+		x += animation_parameter*(3.75);
+	if(pressed_s)
+		z += animation_parameter*(3.75);
 
 	GLfloat mat_ambient[] ={ 0.05, 0.0, 1, 1.0f };
 	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
 
 	/* body */
 	glPushMatrix();
-    	glTranslatef(0,1.3,0);
+    	glTranslatef(x,1.3,z);
     	glScalef(1.3,1.2,1);
     	glutSolidCube(1);
     glPopMatrix();
     
     /* legs */
     glPushMatrix();
-    	/* glTranslatef(0.34,0.08,0); */
-    	glTranslatef(-0.34,0.5,0);
+    	glTranslatef(x - 0.34,0.5,z);
     	glScalef(0.6,0.6,1);
     	glutSolidCube(1);
     glPopMatrix();
     
     glPushMatrix();
-    	glTranslatef(0.34,0.5,0);
+    	glTranslatef(x + 0.34,0.5,z);
     	glScalef(0.6,0.6,1);
     	glutSolidCube(1);
     glPopMatrix();
     
     /* head */
     glPushMatrix();
-    	glTranslatef(0,2.4,0);
+    	glTranslatef(x,2.4,z);
     	glScalef(0.65,0.65,0.65);
     	glutSolidSphere(1, 16, 16);
     glPopMatrix();
     
     /* hair */
     glPushMatrix();
-    	glTranslatef(0,3.2, 0);
+    	glTranslatef(x,3.2, z);
     	glScalef(0.2,0.2,0.2);
     	glutSolidSphere(1, 16, 16);
     glPopMatrix();
@@ -192,7 +235,10 @@ void draw_boy()
 
 void draw_floor(int num_tiles)
 {
-	float translate_by_z = 4;
+	glPushMatrix();
+	
+	float translate_by_x = 3.75;
+	float translate_by_z = 3.75;
 
 	glTranslatef(-0.3,0,0);
 
@@ -218,6 +264,32 @@ void draw_floor(int num_tiles)
     	glTranslatef(0,0, -translate_by_z);
     	glScalef(3.5,0.3,3.5);
     	glutSolidCube(1);
+    glPopMatrix();
+    
+    glPushMatrix();
+    	glTranslatef(0,0, -translate_by_z*2);
+    	glScalef(3.5,0.3,3.5);
+    	glutSolidCube(1);
+    glPopMatrix();
+    
+    glPushMatrix();
+    	glTranslatef(-translate_by_x,0, -translate_by_z*2);
+    	glScalef(3.5,0.3,3.5);
+    	glutSolidCube(1);
+    glPopMatrix();
+    
+    glPushMatrix();
+    	glTranslatef(-translate_by_x,0, -translate_by_z);
+    	glScalef(3.5,0.3,3.5);
+    	glutSolidCube(1);
+    glPopMatrix();
+    
+    glPushMatrix();
+    	glTranslatef(-translate_by_x,0, 0);
+    	glScalef(3.5,0.3,3.5);
+    	glutSolidCube(1);
+    glPopMatrix();
+    
     glPopMatrix();
     
     glPopAttrib();
@@ -272,6 +344,87 @@ void draw_triangle_carpet()
 	glPopMatrix();
 	
 	glPopAttrib();
+}
+
+void on_keyboard(unsigned char key, int x, int y) {
+
+	change_key_pressed(key);
+    switch(key) {
+        case 'w':
+        case 'W': 
+        case 's': 
+        case 'S':
+        case 'a':
+        case 'A':
+        case 'd':
+        case 'D':
+        	animation_ongoing = 1;
+        	glutTimerFunc(TIMER_INTERVAL, on_timer, TIMER_ID);
+        	break;  
+        case 27:
+          exit(0);
+          break;
+    }
+}
+
+void on_timer(int id) {
+    if (id == TIMER_ID) {
+
+		
+    }
+    
+    glutPostRedisplay();
+    
+	if (animation_ongoing)
+	{
+		if (animation_parameter >= 1)
+		{
+			animation_parameter = 0;
+			animation_ongoing = 0;
+			if (pressed_w)
+				previous_tile_z++;
+			if (pressed_a)
+				previous_tile_x++;
+			if (pressed_s)
+				previous_tile_z--;
+			if (pressed_d)
+				previous_tile_x--;
+		}
+		else {
+			animation_parameter += 0.02;
+			glutTimerFunc(TIMER_INTERVAL,on_timer,TIMER_ID);	
+		}
+	}
+}
+
+void change_key_pressed(char key)
+{
+	pressed_a = 0;
+	pressed_w = 0;
+	pressed_s = 0;
+	pressed_d = 0;
+        	
+	switch(key) {
+        case 'w':
+        case 'W': 
+        	pressed_w = 1;
+            break;
+        case 's': 
+        case 'S':
+        	pressed_s = 1;
+            break;
+        case 'a':
+        case 'A':
+        	pressed_a = 1;
+            break;
+        case 'd':
+        case 'D':
+        	pressed_d = 1;
+        	break;  
+        case 27:
+          exit(0);
+          break;
+    }
 }
     
 
