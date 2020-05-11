@@ -4,6 +4,7 @@
 #include <time.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <limits.h>
 
 #define TIMER_INTERVAL 1
 #define TIMER_ID 0
@@ -21,6 +22,9 @@ void draw_triangle_carpet(void);
 void on_keyboard(unsigned char key, int x, int y);
 static void on_timer(int id);
 void change_key_pressed(char);
+void draw_special();
+void set_arena_for_level(int);
+int check_all_specials_activated();
 
 /* used to keep track of the light source so a small cube acting as a 
    lightbulb can be drawn to more easily see where the light is coming from */
@@ -48,6 +52,22 @@ char array_of_moves[MAX_NUM_MOVES];
 int current_move_index = 0;
 
 int pressed_enter = 0;
+
+int is_current_special_activated = 0;
+int current_level = 1;
+
+typedef struct simple_tile_struct {
+	int x;
+	int z;
+} simple_tile;
+
+typedef struct special_tile_struct {
+	int x;
+	int z;
+	int activated;
+} special_tile;
+special_tile array_special_tiles[15];
+simple_tile array_simple_tiles[40];
 
 int main(int argc, char **argv){
     glutInit(&argc, argv);
@@ -80,6 +100,7 @@ int main(int argc, char **argv){
 	
 	srand(time(NULL));
 	array_of_moves[0] = 'q';
+	set_arena_for_level(current_level);
 	
 	/* initializing carpet */
 	int i;
@@ -92,6 +113,63 @@ int main(int argc, char **argv){
     glutMainLoop();
 
     return 0;
+}
+
+void set_arena_for_level(int level)
+{
+	switch(level)
+	{
+		case 1:
+			array_special_tiles[0].x = 0;
+			array_special_tiles[0].z = -2;
+			array_special_tiles[0].activated = 0; 
+			array_special_tiles[1].x = -1;
+			array_special_tiles[1].z = -2;
+			array_special_tiles[1].activated = 0;
+			array_special_tiles[2].x = INT_MAX;
+			
+			array_simple_tiles[0].x = 0; 
+			array_simple_tiles[0].z = 0;
+			array_simple_tiles[1].x = 0; 
+			array_simple_tiles[1].z = -1;
+			array_simple_tiles[2].x = -1; 
+			array_simple_tiles[2].z = 0;
+			array_simple_tiles[3].x = -1; 
+			array_simple_tiles[3].z = -1;
+			array_simple_tiles[4].x = INT_MAX;
+			break;
+	}
+}
+
+void draw_special() // only if e was pressed on a special tile
+{
+	if (!is_current_special_activated)
+		return;
+		
+	glPushAttrib(GL_LIGHTING_BIT);
+	
+	x = previous_tile_x*(-3.75) - 0.3;
+	z = previous_tile_z*(-3.75);
+	float special_y = - animation_parameter;
+	
+	glPushAttrib(GL_LIGHTING_BIT);
+	GLfloat mat_ambient_special[] ={ 0.5, 1, 1, 1 };
+	GLfloat mat_diffuse_special[] ={ 0.5, 1, 1, 1 };
+	GLfloat mat_specular_special[] ={ 0.5, 1, 1, 0.922f };
+	GLfloat shine_special[] = { 11.264f };
+
+	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient_special);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse_special);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular_special);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, shine_special);
+    
+    glPushMatrix();
+    	glTranslatef(x, special_y, z);
+    	glScalef(3.5,0.3,3.5);
+    	glutSolidCube(1);
+    glPopMatrix();
+    
+    glPopAttrib();
 }
 
 void on_reshape(int width, int height) {
@@ -127,6 +205,7 @@ void on_display() {
     	glTranslatef(light_x, light_y, light_z);
     	glutSolidCube(0.2);
     glPopMatrix();
+    	draw_special();
         draw_girl();
         glPushMatrix();
         //glTranslatef(-3.75, 0, 0);
@@ -255,55 +334,71 @@ void draw_floor(int num_tiles)
 	float translate_by_z = 3.75;
 
 	glTranslatef(-0.3,0,0);
-
+	
+	int current_simple_index = 0;
+	simple_tile current_simple;
+	
+	int current_special_index = 0;
+	special_tile current_special;
+	
 	glPushAttrib(GL_LIGHTING_BIT);
-
-	GLfloat mat_ambient[] ={ 1,1,1,1};
-	GLfloat mat_diffuse[] ={1,1,1,1 };
-	GLfloat mat_specular[] ={ 1,1,1, 0.922f};
+	
+	GLfloat mat_ambient[] ={ 1, 1, 1, 1 };
+	GLfloat mat_diffuse[] ={ 1, 1, 1, 1 };
+	GLfloat mat_specular[] ={ 1, 1, 1, 0.922f };
 	GLfloat shine[] = { 11.264f };
-
+	
+	GLfloat mat_ambient_special[] ={ 0.5, 1, 1, 1 };
+	GLfloat mat_diffuse_special[] ={ 0.5, 1, 1, 1 };
+	GLfloat mat_specular_special[] ={ 0.5, 1, 1, 0.922f };
+	GLfloat shine_special[] = { 11.264f };
+	
 	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
 	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse);
-    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
-    glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, shine);
-    
-	glPushMatrix();
-    	glTranslatef(0,0,0);
-    	glScalef(3.5,0.3,3.5);
-    	glutSolidCube(1);
-    glPopMatrix();
-    
-    glPushMatrix();
-    	glTranslatef(0,0, -translate_by_z);
-    	glScalef(3.5,0.3,3.5);
-    	glutSolidCube(1);
-    glPopMatrix();
-    
-    glPushMatrix();
-    	glTranslatef(0,0, -translate_by_z*2);
-    	glScalef(3.5,0.3,3.5);
-    	glutSolidCube(1);
-    glPopMatrix();
-    
-    glPushMatrix();
-    	glTranslatef(-translate_by_x,0, -translate_by_z*2);
-    	glScalef(3.5,0.3,3.5);
-    	glutSolidCube(1);
-    glPopMatrix();
-    
-    glPushMatrix();
-    	glTranslatef(-translate_by_x,0, -translate_by_z);
-    	glScalef(3.5,0.3,3.5);
-    	glutSolidCube(1);
-    glPopMatrix();
-    
-    glPushMatrix();
-    	glTranslatef(-translate_by_x,0, 0);
-    	glScalef(3.5,0.3,3.5);
-    	glutSolidCube(1);
-    glPopMatrix();
-    
+	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, shine);
+	
+	while (array_simple_tiles[current_simple_index].x != INT_MAX)
+	{
+		current_simple = array_simple_tiles[current_simple_index];
+	
+		glPushMatrix();
+			glTranslatef(translate_by_x * current_simple.x, 0 , translate_by_z * current_simple.z);
+			glScalef(3.5,0.3,3.5);
+			glutSolidCube(1);
+    	glPopMatrix();
+    	
+    	current_simple_index++;
+	}
+	
+	while (array_special_tiles[current_special_index].x != INT_MAX)
+	{
+		current_special = array_special_tiles[current_special_index];
+	
+		if (current_special.activated)
+		{
+			glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
+			glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse);
+			glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
+			glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, shine);
+		}
+		else 
+		{
+			glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient_special);
+			glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse_special);
+			glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular_special);
+			glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, shine_special);
+		}
+	
+		glPushMatrix();
+			glTranslatef(translate_by_x * current_special.x, 0 , translate_by_z * current_special.z);
+			glScalef(3.5,0.3,3.5);
+			glutSolidCube(1);
+    	glPopMatrix();
+    	
+    	current_special_index++;
+	}
+	
     glPopMatrix();
     
     glPopAttrib();
@@ -377,6 +472,8 @@ void on_keyboard(unsigned char key, int x, int y) {
         case 'A':
         case 'd':
         case 'D':
+        case 'E':
+        case 'e':
         	if (pressed_enter)
         		break;
         	add_to_move_array(tolower(key));
@@ -415,28 +512,70 @@ void on_timer(int id) {
 			if (pressed_d)
 				previous_tile_x--;
 			
-			glutTimerFunc(TIMER_INTERVAL,on_timer,TIMER_ID);
+			// TODO change
+			is_current_special_activated = 0;
 		}
 		else {
-			animation_parameter += 0.02;
-			glutTimerFunc(TIMER_INTERVAL,on_timer,TIMER_ID);	
+			animation_parameter += 0.02;	
 		}
+		
+		glutTimerFunc(TIMER_INTERVAL,on_timer,TIMER_ID);
 	}
 	else
 	{
-		current_move_index++;
-		if (array_of_moves[current_move_index] == 'q') 
+		if(check_all_specials_activated())
 		{
-			// do nothing
+			printf("Level Complete!\n");
+			// TODO move all initializations to level set up method so that everything's reset properly
 		}
-		else // w a s d 
+		else 
 		{
-			change_key_pressed(array_of_moves[current_move_index]);
-			animation_ongoing = 1;
-			animation_parameter = 0;
-			glutTimerFunc(TIMER_INTERVAL,on_timer,TIMER_ID);
+			current_move_index++;
+			char current = array_of_moves[current_move_index];
+			if (current == 'q') 
+			{
+				// do nothing
+			}
+			else // w a s d e
+			{
+				if (current == 'e')
+				{
+					int current_special_index = 0;
+					while (array_special_tiles[current_special_index].x != INT_MAX)
+					{
+						special_tile current_special = array_special_tiles[current_special_index];
+						if (current_special.x == -previous_tile_x && current_special.z == -previous_tile_z)
+						{
+							array_special_tiles[current_special_index].activated = 1;
+							is_current_special_activated = 1;
+						}
+						current_special_index++;
+					} 
+				}
+				
+				change_key_pressed(array_of_moves[current_move_index]);
+				animation_ongoing = 1;
+				animation_parameter = 0;
+				glutTimerFunc(TIMER_INTERVAL,on_timer,TIMER_ID);
+			}
 		}
 	}
+}
+
+int check_all_specials_activated()
+{
+	int current_special_index = 0;
+	
+	while (array_special_tiles[current_special_index].x != INT_MAX)
+	{
+		if (array_special_tiles[current_special_index].activated == 0)
+		{
+			return 0;
+		}
+		current_special_index++;
+	} 
+	
+	return 1;
 }
 
 void change_key_pressed(char key)
