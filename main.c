@@ -1,4 +1,4 @@
-#include <GL/glut.h>
+#include <GL/freeglut.h>
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
@@ -99,7 +99,7 @@ int main(int argc, char **argv){
     glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
 	
 	srand(time(NULL));
-	array_of_moves[0] = 'q';
+	array_of_moves[0] = '\0';
 	set_arena_for_level(current_level);
 	
 	/* initializing carpet */
@@ -200,7 +200,16 @@ void on_display() {
               0, 0, 0,
               0, 1, 0);
     */
-    
+    glPushAttrib(GL_LIGHTING_BIT);
+		glPushMatrix();
+			glRasterPos3i(-15,-20,1);
+			GLfloat mat_ambient[] ={ 1, 1, 1, 1 };
+			glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
+			glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, array_of_moves);
+		glPopMatrix();
+	glPopAttrib();
+	
+	
     glPushMatrix();
     	glTranslatef(light_x, light_y, light_z);
     	glutSolidCube(0.2);
@@ -238,6 +247,21 @@ void draw_girl()
 	GLfloat mat_ambient[] ={ 0.7, 0.0, 0.2, 1.0f };
 	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
 
+	if (is_current_special_activated)
+	{
+		y = 0;
+		/* body */
+		glPushMatrix();
+			glTranslatef(x, y + 0.6, z);
+			glRotatef(25,0,1,0);
+			glRotatef(90,0,0,1);
+			glScalef(1.3,1.3,1.3);
+			glRotatef(animation_parameter*180,1,0,0);
+			glutSolidTetrahedron();
+		glPopMatrix();
+	}
+	else 
+	{
 	/* body */
 	glPushMatrix();
 		glTranslatef(x, y + 0.6, z);
@@ -246,6 +270,7 @@ void draw_girl()
 		glScalef(1.3,1.3,1.3);
 		glutSolidTetrahedron();
 	glPopMatrix();
+	}
 	
 	/* head */
 	glPushMatrix();
@@ -459,7 +484,7 @@ void add_to_move_array(char move)
 {
 	array_of_moves[current_move_index] = move;
 	current_move_index++;
-	array_of_moves[current_move_index] = 'q';
+	array_of_moves[current_move_index] = '\0';
 }
 
 void on_keyboard(unsigned char key, int x, int y) {
@@ -477,7 +502,17 @@ void on_keyboard(unsigned char key, int x, int y) {
         	if (pressed_enter)
         		break;
         	add_to_move_array(tolower(key));
+        	glutPostRedisplay();
         	break;  
+        case 'C':
+        case 'c':
+        	// resetting input
+        	if (pressed_enter)
+        		break;
+        	current_move_index = 0;
+        	array_of_moves[0] = '\0';
+        	glutPostRedisplay();
+        	break;
         case 13: // code for ENTER
         	if (pressed_enter) 
         		break;
@@ -532,7 +567,7 @@ void on_timer(int id) {
 		{
 			current_move_index++;
 			char current = array_of_moves[current_move_index];
-			if (current == 'q') 
+			if (current == '\0') 
 			{
 				// do nothing
 			}
