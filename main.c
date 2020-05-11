@@ -3,11 +3,14 @@
 #include <math.h>
 #include <time.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 #define TIMER_INTERVAL 1
 #define TIMER_ID 0
 
 #define PI 3.1415926535897
+
+#define MAX_NUM_MOVES 200
 
 static void on_display();
 static void on_reshape(int width, int height);
@@ -41,6 +44,11 @@ float y = 0;
 int previous_tile_z = 0;
 int previous_tile_x = 0;
 
+char array_of_moves[MAX_NUM_MOVES];
+int current_move_index = 0;
+
+int pressed_enter = 0;
+
 int main(int argc, char **argv){
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
@@ -71,6 +79,7 @@ int main(int argc, char **argv){
     glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
 	
 	srand(time(NULL));
+	array_of_moves[0] = 'q';
 	
 	/* initializing carpet */
 	int i;
@@ -120,8 +129,8 @@ void on_display() {
     glPopMatrix();
         draw_girl();
         glPushMatrix();
-        glTranslatef(-3.75, 0, 0);
-        draw_boy();
+        //glTranslatef(-3.75, 0, 0);
+        //draw_boy();
         glPopMatrix();
         draw_floor(1);
         draw_triangle_carpet();
@@ -351,9 +360,14 @@ void draw_triangle_carpet()
 	glPopAttrib();
 }
 
-void on_keyboard(unsigned char key, int x, int y) {
+void add_to_move_array(char move) 
+{
+	array_of_moves[current_move_index] = move;
+	current_move_index++;
+	array_of_moves[current_move_index] = 'q';
+}
 
-	change_key_pressed(key);
+void on_keyboard(unsigned char key, int x, int y) {
     switch(key) {
         case 'w':
         case 'W': 
@@ -363,9 +377,19 @@ void on_keyboard(unsigned char key, int x, int y) {
         case 'A':
         case 'd':
         case 'D':
+        	if (pressed_enter)
+        		break;
+        	add_to_move_array(tolower(key));
+        	break;  
+        case 13: // code for ENTER
+        	if (pressed_enter) 
+        		break;
+        	pressed_enter = 1;
+        	current_move_index = 0;
+			change_key_pressed(array_of_moves[current_move_index]);
         	animation_ongoing = 1;
         	glutTimerFunc(TIMER_INTERVAL, on_timer, TIMER_ID);
-        	break;  
+        	break;
         case 27:
           exit(0);
           break;
@@ -373,10 +397,6 @@ void on_keyboard(unsigned char key, int x, int y) {
 }
 
 void on_timer(int id) {
-    if (id == TIMER_ID) {
-
-		
-    }
     
     glutPostRedisplay();
     
@@ -394,10 +414,27 @@ void on_timer(int id) {
 				previous_tile_z--;
 			if (pressed_d)
 				previous_tile_x--;
+			
+			glutTimerFunc(TIMER_INTERVAL,on_timer,TIMER_ID);
 		}
 		else {
 			animation_parameter += 0.02;
 			glutTimerFunc(TIMER_INTERVAL,on_timer,TIMER_ID);	
+		}
+	}
+	else
+	{
+		current_move_index++;
+		if (array_of_moves[current_move_index] == 'q') 
+		{
+			// do nothing
+		}
+		else // w a s d 
+		{
+			change_key_pressed(array_of_moves[current_move_index]);
+			animation_ongoing = 1;
+			animation_parameter = 0;
+			glutTimerFunc(TIMER_INTERVAL,on_timer,TIMER_ID);
 		}
 	}
 }
