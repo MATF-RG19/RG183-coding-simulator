@@ -8,6 +8,9 @@
 
 #define TIMER_INTERVAL 1
 #define TIMER_ID 0
+#define TIMER_ID_CAMERA_OUT 1
+#define TIMER_ID_CAMERA_IN 2
+#define RANDOM_ARRAY_LENGTH 120
 
 #define PI 3.1415926535897
 
@@ -32,7 +35,7 @@ static int light_x = 3;
 static int light_y = 4;
 static int light_z = -5;
 
-float random_array[500];
+float random_array[RANDOM_ARRAY_LENGTH];
 float animation_parameter = 0;
 int animation_parameter_x = 0;
 int animation_parameter_z = 0;
@@ -55,6 +58,10 @@ int pressed_enter = 0;
 
 int is_current_special_activated = 0;
 int current_level = 1;
+
+float camera_parameter_in_out = 0;
+float camera_parameter_z = 0;
+float camera_parameter_x = 0;
 
 typedef struct simple_tile_struct {
 	int x;
@@ -104,10 +111,12 @@ int main(int argc, char **argv){
 	
 	/* initializing carpet */
 	int i;
-	for (i = 0; i < 500; i++)
+	for (i = 0; i < RANDOM_ARRAY_LENGTH; i++)
 	{
 		random_array[i] = (float) rand() / RAND_MAX;
 	}
+	
+	glutTimerFunc(1000, on_timer, TIMER_ID_CAMERA_OUT);
 	
     glClearColor(0,0, 0, 0);
     glutMainLoop();
@@ -122,21 +131,30 @@ void set_arena_for_level(int level)
 		case 1:
 			array_special_tiles[0].x = 0;
 			array_special_tiles[0].z = -2;
-			array_special_tiles[0].activated = 0; 
-			array_special_tiles[1].x = -1;
-			array_special_tiles[1].z = -2;
+			array_special_tiles[0].activated = 0;
+			array_special_tiles[1].x = 0;
+			array_special_tiles[1].z = -5;
 			array_special_tiles[1].activated = 0;
-			array_special_tiles[2].x = INT_MAX;
+			array_special_tiles[2].x = -4;
+			array_special_tiles[2].z = -5;
+			array_special_tiles[2].activated = 0;
+			array_special_tiles[3].x = INT_MAX;
 			
 			array_simple_tiles[0].x = 0; 
 			array_simple_tiles[0].z = 0;
 			array_simple_tiles[1].x = 0; 
 			array_simple_tiles[1].z = -1;
-			array_simple_tiles[2].x = -1; 
-			array_simple_tiles[2].z = 0;
-			array_simple_tiles[3].x = -1; 
-			array_simple_tiles[3].z = -1;
-			array_simple_tiles[4].x = INT_MAX;
+			array_simple_tiles[2].x = 0; 
+			array_simple_tiles[2].z = -3;
+			array_simple_tiles[3].x = 0; 
+			array_simple_tiles[3].z = -4;
+			array_simple_tiles[4].x = -1; 
+			array_simple_tiles[4].z = -5;
+			array_simple_tiles[5].x = -2; 
+			array_simple_tiles[5].z = -5;
+			array_simple_tiles[6].x = -3; 
+			array_simple_tiles[6].z = -5;
+			array_simple_tiles[7].x = INT_MAX;
 			break;
 	}
 }
@@ -177,7 +195,7 @@ void on_reshape(int width, int height) {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
 
-    gluPerspective(30, (float) width/height, 1, 60);
+    gluPerspective(30, (float) width/height, 1, 150);
 }
 
 void on_display() {
@@ -186,20 +204,10 @@ void on_display() {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     
-    gluLookAt(18, 16, 22,
-              0, 0, 0,
-              0, 1, 0);
-    
-    /*
-    gluLookAt(0, 0, 15,
-              0, 0, 0,
-              0, 1, 0);
-	*/
-	/*
-	gluLookAt(-15, 0, 0,
-              0, 0, 0,
-              0, 1, 0);
-    */
+	gluLookAt(18 - camera_parameter_in_out*3 + camera_parameter_x, 16 + camera_parameter_in_out*24, 22 + camera_parameter_in_out*8 - camera_parameter_z,
+			  0 + camera_parameter_x, 0, 0 - camera_parameter_in_out*10 - camera_parameter_z,
+			  0, 1, 0);
+              
     glPushAttrib(GL_LIGHTING_BIT);
 		glPushMatrix();
 			glRasterPos3i(-15,-20,1);
@@ -256,7 +264,7 @@ void draw_girl()
 			glRotatef(25,0,1,0);
 			glRotatef(90,0,0,1);
 			glScalef(1.3,1.3,1.3);
-			glRotatef(animation_parameter*180,1,0,0);
+			glRotatef(animation_parameter*130,1,0,0);
 			glutSolidTetrahedron();
 		glPopMatrix();
 	}
@@ -429,6 +437,8 @@ void draw_floor(int num_tiles)
     glPopAttrib();
 }
 
+// TODO ubaci da se devojcica rotira kad prvi put skrene realno
+
 void draw_triangle_carpet()
 {
 	glPushAttrib(GL_LIGHTING_BIT);
@@ -444,10 +454,12 @@ void draw_triangle_carpet()
 	int z;
 	int index_of_random_array = 0;
 	
-	for(x = -40; x < 40; x = x + 4)
+	for(x = -70; x < 70; x = x + 4)
 	{
-		for(z = -40; z < 40; z = z + 4)
+		for(z = -70; z < 70; z = z + 4)
 		{
+			if (index_of_random_array == RANDOM_ARRAY_LENGTH - 1)
+				index_of_random_array = 0;
 			float random_position = random_array[index_of_random_array++];
 			float position_z = z - random_position;
 			float position_x = x + random_position;
@@ -519,8 +531,9 @@ void on_keyboard(unsigned char key, int x, int y) {
         	pressed_enter = 1;
         	current_move_index = 0;
 			change_key_pressed(array_of_moves[current_move_index]);
-        	animation_ongoing = 1;
-        	glutTimerFunc(TIMER_INTERVAL, on_timer, TIMER_ID);
+        	// animation_ongoing = 1;
+        	// glutTimerFunc(TIMER_INTERVAL, on_timer, TIMER_ID);
+        	glutTimerFunc(TIMER_INTERVAL, on_timer, TIMER_ID_CAMERA_IN);
         	break;
         case 27:
           exit(0);
@@ -530,9 +543,31 @@ void on_keyboard(unsigned char key, int x, int y) {
 
 void on_timer(int id) {
     
-    glutPostRedisplay();
-    
-	if (animation_ongoing)
+    if (id == TIMER_ID_CAMERA_OUT)
+    {
+    	if (camera_parameter_in_out >= 1)
+    		return;
+    		
+    	camera_parameter_in_out += 0.005;
+    	glutTimerFunc(TIMER_INTERVAL, on_timer, TIMER_ID_CAMERA_OUT);
+    	
+    }
+    else if (id == TIMER_ID_CAMERA_IN)
+    {
+    	if (camera_parameter_in_out > 0)
+    	{
+			camera_parameter_in_out -= 0.008;
+			glutTimerFunc(TIMER_INTERVAL, on_timer, TIMER_ID_CAMERA_IN);
+    	}
+    	else 
+    	{
+    		animation_ongoing = 1;
+    		animation_parameter = 0;
+    		glutTimerFunc(TIMER_INTERVAL, on_timer, TIMER_ID);
+    	}
+    	
+    }
+    else if (animation_ongoing)
 	{
 		if (animation_parameter >= 1)
 		{
@@ -551,7 +586,23 @@ void on_timer(int id) {
 			is_current_special_activated = 0;
 		}
 		else {
-			animation_parameter += 0.02;	
+			if (pressed_w)
+			{
+				camera_parameter_z += 0.08;
+			}
+			if (pressed_a)
+			{
+				camera_parameter_x -= 0.08;
+			}
+			if (pressed_s)
+			{
+				camera_parameter_z -= 0.08;
+			}
+			if (pressed_d)
+			{
+				camera_parameter_x += 0.08;
+			}
+			animation_parameter += 0.03;	
 		}
 		
 		glutTimerFunc(TIMER_INTERVAL,on_timer,TIMER_ID);
@@ -595,6 +646,8 @@ void on_timer(int id) {
 			}
 		}
 	}
+	
+	glutPostRedisplay();
 }
 
 int check_all_specials_activated()
