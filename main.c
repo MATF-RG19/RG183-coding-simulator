@@ -16,6 +16,10 @@
 
 #define MAX_NUM_MOVES 200
 
+// TODO add animation and failure when the figure falls off the tiles
+// TODO add special animation when the last special tile has been activated
+
+
 static void on_display();
 static void on_reshape(int width, int height);
 void draw_girl(void);
@@ -28,6 +32,7 @@ void change_key_pressed(char);
 void draw_special();
 void set_arena_for_level(int);
 int check_all_specials_activated();
+int last_special_tile_activated = 0;
 
 /* used to keep track of the light source so a small cube acting as a 
    lightbulb can be drawn to more easily see where the light is coming from */
@@ -255,9 +260,14 @@ void draw_girl()
 	GLfloat mat_ambient[] ={ 0.7, 0.0, 0.2, 1.0f };
 	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
 
+
 	if (is_current_special_activated)
 	{
-		y = 0;
+		if (!last_special_tile_activated)
+		{
+			y = 0;
+		}
+		
 		/* body */
 		glPushMatrix();
 			glTranslatef(x, y + 0.6, z);
@@ -267,17 +277,18 @@ void draw_girl()
 			glRotatef(animation_parameter*130,1,0,0);
 			glutSolidTetrahedron();
 		glPopMatrix();
+		
 	}
 	else 
 	{
-	/* body */
-	glPushMatrix();
-		glTranslatef(x, y + 0.6, z);
-		glRotatef(25,0,1,0);
-		glRotatef(90,0,0,1);
-		glScalef(1.3,1.3,1.3);
-		glutSolidTetrahedron();
-	glPopMatrix();
+		/* body */
+		glPushMatrix();
+			glTranslatef(x, y + 0.6, z);
+			glRotatef(25,0,1,0);
+			glRotatef(90,0,0,1);
+			glScalef(1.3,1.3,1.3);
+			glutSolidTetrahedron();
+		glPopMatrix();
 	}
 	
 	/* head */
@@ -453,6 +464,7 @@ void draw_triangle_carpet()
 	int x;
 	int z;
 	int index_of_random_array = 0;
+	
 	
 	for(x = -70; x < 70; x = x + 4)
 	{
@@ -634,6 +646,7 @@ void on_timer(int id) {
 						{
 							array_special_tiles[current_special_index].activated = 1;
 							is_current_special_activated = 1;
+							check_all_specials_activated();
 						}
 						current_special_index++;
 					} 
@@ -663,6 +676,7 @@ int check_all_specials_activated()
 		current_special_index++;
 	} 
 	
+	last_special_tile_activated = 1;
 	return 1;
 }
 
