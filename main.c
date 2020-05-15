@@ -6,11 +6,12 @@
 #include <ctype.h>
 #include <limits.h>
 
-#define TIMER_INTERVAL 1
+#define TIMER_INTERVAL 10
 #define TIMER_ID 0
 #define TIMER_ID_CAMERA_OUT 1
 #define TIMER_ID_CAMERA_IN 2
 #define RANDOM_ARRAY_LENGTH 120
+#define TRIANGLE_OPTIMIZATION_ARRAY_LENGTH 100
 
 #define PI 3.1415926535897
 
@@ -232,7 +233,7 @@ void on_display() {
         glPushMatrix();
         //glTranslatef(-3.75, 0, 0);
         //draw_boy();
-        glPopMatrix();
+        glPopMatrix(); 
         draw_floor(1);
         draw_triangle_carpet();
     glPopMatrix();
@@ -450,6 +451,38 @@ void draw_floor(int num_tiles)
 
 // TODO ubaci da se devojcica rotira kad prvi put skrene realno
 
+void draw_triangle_carpet_optimized(int* triangle_optimization_array, int* random_array, int index_of_random_array)
+{
+	int group_index;
+	int number_of_groups = 4;
+	int i;
+	GLfloat mat_ambient_1[] ={ 0.1, 1, 0.1, 1.0f };
+	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient_1);
+	
+	GLfloat mat_ambient_2[] ={ 1, 1, 0.3, 1.0f };
+	
+	for(group_index = 0; group_index < number_of_groups*2; group_index = group_index + 2)
+	{
+		// when we're done with drawing the first "half" of the triangles we want to change the color
+		if (group_index == number_of_groups)
+		{
+			glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient_2);
+		}
+	
+		glPushMatrix();
+			glRotatef(90*random_array[index_of_random_array++], 0, 1, 0);
+			glBegin(GL_TRIANGLES);
+			for (i = group_index; i <= TRIANGLE_OPTIMIZATION_ARRAY_LENGTH; i = i + 8)
+			{	
+				glVertex3f(triangle_optimization_array[i],-0.4,triangle_optimization_array[i+1]);
+				glVertex3f(triangle_optimization_array[i],-0.4, triangle_optimization_array[i+1] - 0.7);
+				glVertex3f(triangle_optimization_array[i] + 0.7,-0.4,triangle_optimization_array[i+1]);
+			}
+			glEnd();
+		glPopMatrix();
+	}
+}
+
 void draw_triangle_carpet()
 {
 	glPushAttrib(GL_LIGHTING_BIT);
@@ -465,37 +498,57 @@ void draw_triangle_carpet()
 	int z;
 	int index_of_random_array = 0;
 	
+	float triangle_optimization_array[TRIANGLE_OPTIMIZATION_ARRAY_LENGTH];
 	
+	int triangle_optimization_array_position = 0;
 	for(x = -70; x < 70; x = x + 4)
 	{
 		for(z = -70; z < 70; z = z + 4)
 		{
-			if (index_of_random_array == RANDOM_ARRAY_LENGTH - 1)
+			if (index_of_random_array == RANDOM_ARRAY_LENGTH - 4)
 				index_of_random_array = 0;
 			float random_position = random_array[index_of_random_array++];
 			float position_z = z - random_position;
 			float position_x = x + random_position;
 			
-			if (random_position < 0.5)
+			if (triangle_optimization_array_position == TRIANGLE_OPTIMIZATION_ARRAY_LENGTH)
 			{
-				GLfloat mat_ambient[] ={ 0.1, 1, 0.1, 1.0f };
-				glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
-			}
-			else 
-			{
-				GLfloat mat_ambient[] ={ 1, 1, 0.3, 1.0f };
-				glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
+				// draw_triangle_carpet_optimized(triangle_optimization_array, random_array, index_of_random_array);
+				
+				int group_index;
+				int number_of_groups = 4;
+				int i;
+				GLfloat mat_ambient_1[] ={ 0.1, 1, 0.1, 1.0f };
+				glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient_1);
+				
+				GLfloat mat_ambient_2[] ={ 1, 1, 0.3, 1.0f };
+				
+				for(group_index = 0; group_index < number_of_groups*2; group_index = group_index + 2)
+				{
+					// when we're done with drawing the first "half" of the triangles we want to change the color
+					if (group_index == number_of_groups)
+					{
+						glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient_2);
+					}
+				
+					glPushMatrix();
+						glRotatef(90*random_array[index_of_random_array++], 0, 1, 0);
+						glBegin(GL_TRIANGLES);
+						for (i = group_index; i <= TRIANGLE_OPTIMIZATION_ARRAY_LENGTH; i = i + 8)
+						{	
+							glVertex3f(triangle_optimization_array[i],-0.4,triangle_optimization_array[i+1]);
+							glVertex3f(triangle_optimization_array[i],-0.4, triangle_optimization_array[i+1] - 0.7);
+							glVertex3f(triangle_optimization_array[i] + 0.7,-0.4,triangle_optimization_array[i+1]);
+						}
+						glEnd();
+					glPopMatrix();
+				}
+				
+				triangle_optimization_array_position = 0;
 			}
 			
-			glPushMatrix();
-				glRotatef(90*random_position, 0, 1, 0);
-			
-				glBegin(GL_POLYGON);
-					glVertex3f(position_x,-0.4,position_z);
-					glVertex3f(position_x,-0.4, position_z - 0.7);
-					glVertex3f(position_x + 0.7,-0.4,position_z);
-				glEnd();
-			glPopMatrix();
+			triangle_optimization_array[triangle_optimization_array_position++] = position_x;
+			triangle_optimization_array[triangle_optimization_array_position++] = position_z;
 		}
 	}
 	
