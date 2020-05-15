@@ -42,12 +42,9 @@ static int light_z = -5;
 
 float random_array[RANDOM_ARRAY_LENGTH];
 float animation_parameter = 0;
-int animation_parameter_x = 0;
-int animation_parameter_z = 0;
 char current_pressed_key = '\0';
 char previous_pressed_key = 'w'; // because at the beginning the figure is facing forward
 int animation_ongoing = 0;
-int privremeni_brojac = 0;
 float z = 0;
 float x = 0;
 float y = 0;
@@ -63,6 +60,7 @@ int is_current_special_activated = 0;
 int current_level = 1;
 
 float camera_parameter_in_out = 0;
+float camera_parameter_in_out_max = 0; // TODO change for each level depending on far you need to zoom out
 float camera_parameter_z = 0;
 float camera_parameter_x = 0;
 
@@ -119,8 +117,6 @@ int main(int argc, char **argv){
 		random_array[i] = (float) rand() / RAND_MAX;
 	}
 	
-	glutTimerFunc(1000, on_timer, TIMER_ID_CAMERA_OUT);
-	
     glClearColor(0,0, 0, 0);
     glutMainLoop();
 
@@ -129,9 +125,52 @@ int main(int argc, char **argv){
 
 void set_arena_for_level(int level)
 {
+
+	animation_parameter = 0;
+	current_pressed_key = '\0';
+	previous_pressed_key = 'w'; // because at the beginning the figure is facing forward
+	animation_ongoing = 0;
+	z = 0;
+	x = 0;
+	y = 0;
+	previous_tile_z = 0;
+	previous_tile_x = 0;
+
+	current_move_index = 0;
+
+	pressed_enter = 0;
+
+	is_current_special_activated = 0;
+
+	camera_parameter_in_out = 0;
+	camera_parameter_z = 0;
+	camera_parameter_x = 0;
+
+	array_of_moves[0] = '\0';
+
+	glutTimerFunc(250, on_timer, TIMER_ID_CAMERA_OUT);
+
 	switch(level)
 	{
 		case 1:
+			camera_parameter_in_out_max = 0.7;
+		
+			array_special_tiles[0].x = 0;
+			array_special_tiles[0].z = -3;
+			array_special_tiles[0].activated = 0;
+			array_special_tiles[1].x = INT_MAX;
+			
+			array_simple_tiles[0].x = 0; 
+			array_simple_tiles[0].z = 0;
+			array_simple_tiles[1].x = 0; 
+			array_simple_tiles[1].z = -1;
+			array_simple_tiles[2].x = 0; 
+			array_simple_tiles[2].z = -2;
+			array_simple_tiles[3].x = INT_MAX;
+			break;
+		case 2:
+			camera_parameter_in_out_max = 1;
+		
 			array_special_tiles[0].x = 0;
 			array_special_tiles[0].z = -2;
 			array_special_tiles[0].activated = 0;
@@ -157,11 +196,11 @@ void set_arena_for_level(int level)
 			array_simple_tiles[5].z = -5;
 			array_simple_tiles[6].x = -3; 
 			array_simple_tiles[6].z = -5;
-			array_simple_tiles[7].x = -1; 
-			array_simple_tiles[7].z = -0;
-			array_simple_tiles[8].x = INT_MAX;
+			array_simple_tiles[7].x = INT_MAX;
 			break;
 	}
+	
+	glutPostRedisplay();
 }
 
 void draw_special() // only if e was pressed on a special tile
@@ -213,14 +252,18 @@ void on_display() {
 			  0 + camera_parameter_x, 0, 0 - camera_parameter_in_out*10 - camera_parameter_z,
 			  0, 1, 0);
               
-    glPushAttrib(GL_LIGHTING_BIT);
-		glPushMatrix();
-			glRasterPos3i(-15,-20,1);
-			GLfloat mat_ambient[] ={ 1, 1, 1, 1 };
-			glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
-			glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, array_of_moves);
-		glPopMatrix();
-	glPopAttrib();
+    if (!pressed_enter)
+    {
+		glPushAttrib(GL_LIGHTING_BIT);
+			glPushMatrix();
+				// glRasterPos3i(-15,-20,1);
+				glRasterPos3i(-15 * camera_parameter_in_out_max,-20 * camera_parameter_in_out_max,1);
+				GLfloat mat_ambient[] ={ 1, 1, 1, 1 };
+				glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
+				glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, array_of_moves);
+			glPopMatrix();
+		glPopAttrib();
+	}
 	
 	
     glPushMatrix();
@@ -660,7 +703,7 @@ void on_timer(int id) {
     
     if (id == TIMER_ID_CAMERA_OUT)
     {
-    	if (camera_parameter_in_out >= 1)
+    	if (camera_parameter_in_out >= camera_parameter_in_out_max)
     		return;
     		
     	camera_parameter_in_out += 0.005;
@@ -738,6 +781,7 @@ void on_timer(int id) {
 			printf("Level Complete!\n");
 			// previous_pressed_key = current_pressed_key;
 			// TODO move all initializations to level set up method so that everything's reset properly
+			set_arena_for_level(++current_level);
 		}
 		else 
 		{
@@ -797,6 +841,4 @@ int check_all_specials_activated()
 	last_special_tile_activated = 1;
 	return 1;
 }
-
-// TODO mozda bi bilo pametno da se umesto flegova koristi karakter za to sta je pritisnuto :/
 
