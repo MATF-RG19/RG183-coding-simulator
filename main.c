@@ -18,7 +18,6 @@
 #define MAX_NUM_MOVES 200
 
 // TODO add animation and failure when the figure falls off the tiles
-// TODO add special animation when the last special tile has been activated
 
 
 static void on_display();
@@ -45,10 +44,8 @@ float random_array[RANDOM_ARRAY_LENGTH];
 float animation_parameter = 0;
 int animation_parameter_x = 0;
 int animation_parameter_z = 0;
-int pressed_a = 0;
-int pressed_w = 0;
-int pressed_s = 0;
-int pressed_d = 0;
+char current_pressed_key = '\0';
+char previous_pressed_key = 'w'; // because at the beginning the figure is facing forward
 int animation_ongoing = 0;
 int privremeni_brojac = 0;
 float z = 0;
@@ -160,7 +157,9 @@ void set_arena_for_level(int level)
 			array_simple_tiles[5].z = -5;
 			array_simple_tiles[6].x = -3; 
 			array_simple_tiles[6].z = -5;
-			array_simple_tiles[7].x = INT_MAX;
+			array_simple_tiles[7].x = -1; 
+			array_simple_tiles[7].z = -0;
+			array_simple_tiles[8].x = INT_MAX;
 			break;
 	}
 }
@@ -249,18 +248,92 @@ void draw_girl()
 	z = previous_tile_z*(-3.75);
 	y = sin(animation_parameter * PI);
 	
-	if (pressed_a)
-		x += animation_parameter*(-3.75);
-	if (pressed_w)
-		z += animation_parameter*(-3.75);
-	if (pressed_d)
-		x += animation_parameter*(3.75);
-	if(pressed_s)
-		z += animation_parameter*(3.75);
+	float extra_static_rotation = 0;
+	float extra_dynamic_rotation = 0;
+	
+	switch (current_pressed_key)
+	{
+		case 'w':
+			z += animation_parameter*(-3.75);
+			break;
+		case 'a':
+			x += animation_parameter*(-3.75);
+			break;
+		case 's':
+			z += animation_parameter*(3.75);
+			break;
+		case 'd':
+			x += animation_parameter*(3.75);
+			break;
+	}
+	
+	switch (previous_pressed_key)
+	{
+		case 'w':
+			switch (current_pressed_key)
+			{
+				case 'a':
+					extra_dynamic_rotation = animation_parameter*90; 
+					break;
+				case 's':
+					extra_dynamic_rotation = animation_parameter*180; 
+					break;
+				case 'd':
+					extra_dynamic_rotation = -animation_parameter*90;
+					break;
+			}
+			break;
+		case 'a':
+			extra_static_rotation = 90;
+			switch (current_pressed_key)
+			{
+				case 'w':
+					extra_dynamic_rotation = -animation_parameter*90; 
+					break;
+				case 's':
+					extra_dynamic_rotation = animation_parameter*90; 
+					break;
+				case 'd':
+					extra_dynamic_rotation = animation_parameter*180;
+					break;
+			}
+			break;
+		case 's':
+			extra_static_rotation = 180;
+			switch (current_pressed_key)
+			{
+				case 'w':
+					extra_dynamic_rotation = animation_parameter*180; 
+					break;
+				case 'a':
+					extra_dynamic_rotation = -animation_parameter*90; 
+					break;
+				case 'd':
+					extra_dynamic_rotation = animation_parameter*90;
+					break;
+			}
+			break;
+		case 'd':
+			extra_static_rotation = 270;
+			switch (current_pressed_key)
+			{
+				case 'w':
+					extra_dynamic_rotation = animation_parameter*90; 
+					break;
+				case 'a':
+					extra_dynamic_rotation = animation_parameter*180; 
+					break;
+				case 's':
+					extra_dynamic_rotation = -animation_parameter*90;
+					break;
+			}
+			break;
+		default:
+			break;
+	}	
 	
 	GLfloat mat_ambient[] ={ 0.7, 0.0, 0.2, 1.0f };
 	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
-
 
 	if (is_current_special_activated)
 	{
@@ -288,6 +361,8 @@ void draw_girl()
 			glRotatef(25,0,1,0);
 			glRotatef(90,0,0,1);
 			glScalef(1.3,1.3,1.3);
+			glRotatef(extra_dynamic_rotation,1,0,0); 
+			glRotatef(extra_static_rotation, 1,0,0);
 			glutSolidTetrahedron();
 		glPopMatrix();
 	}
@@ -295,18 +370,25 @@ void draw_girl()
 	/* head */
 	glPushMatrix();
 		glTranslatef(x,y + 2.1, z);
+		glRotatef(animation_parameter*90,0,1,0);
 		glScalef(0.65,0.65,0.65);
 		glutSolidSphere(1, 16, 16);
 	glPopMatrix();
 	
 	/* hair */
 	glPushMatrix();
-		glTranslatef(x + 0.6,y + 2.5, z + 0.5);
+		glTranslatef(x,y,z);
+		glRotatef(extra_dynamic_rotation,0,1,0); 
+		glRotatef(extra_static_rotation, 0,1,0);
+		glTranslatef(0.6,2.5,0.5);
 		glScalef(0.2,0.2,0.2);
 		glutSolidSphere(1, 16, 16);
 	glPopMatrix();
 	glPushMatrix();
-		glTranslatef(x - 0.6,y +2.5, z + 0.5);
+		glTranslatef(x,y,z);
+		glRotatef(extra_dynamic_rotation,0,1,0); 
+		glRotatef(extra_static_rotation, 0,1,0);
+		glTranslatef(-0.6,2.5,0.5);
 		glScalef(0.2,0.2,0.2);
 		glutSolidSphere(1, 16, 16);
 	glPopMatrix();
@@ -317,7 +399,7 @@ void draw_girl()
 void draw_boy()
 {
 	glPushAttrib(GL_LIGHTING_BIT);
-	
+	/*
 	x = previous_tile_x*(-3.75);
 	z = previous_tile_z*(-3.75);
 	y = sin(animation_parameter * PI);
@@ -449,40 +531,6 @@ void draw_floor(int num_tiles)
     glPopAttrib();
 }
 
-// TODO ubaci da se devojcica rotira kad prvi put skrene realno
-
-void draw_triangle_carpet_optimized(int* triangle_optimization_array, int* random_array, int index_of_random_array)
-{
-	int group_index;
-	int number_of_groups = 4;
-	int i;
-	GLfloat mat_ambient_1[] ={ 0.1, 1, 0.1, 1.0f };
-	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient_1);
-	
-	GLfloat mat_ambient_2[] ={ 1, 1, 0.3, 1.0f };
-	
-	for(group_index = 0; group_index < number_of_groups*2; group_index = group_index + 2)
-	{
-		// when we're done with drawing the first "half" of the triangles we want to change the color
-		if (group_index == number_of_groups)
-		{
-			glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient_2);
-		}
-	
-		glPushMatrix();
-			glRotatef(90*random_array[index_of_random_array++], 0, 1, 0);
-			glBegin(GL_TRIANGLES);
-			for (i = group_index; i <= TRIANGLE_OPTIMIZATION_ARRAY_LENGTH; i = i + 8)
-			{	
-				glVertex3f(triangle_optimization_array[i],-0.4,triangle_optimization_array[i+1]);
-				glVertex3f(triangle_optimization_array[i],-0.4, triangle_optimization_array[i+1] - 0.7);
-				glVertex3f(triangle_optimization_array[i] + 0.7,-0.4,triangle_optimization_array[i+1]);
-			}
-			glEnd();
-		glPopMatrix();
-	}
-}
-
 void draw_triangle_carpet()
 {
 	glPushAttrib(GL_LIGHTING_BIT);
@@ -595,7 +643,8 @@ void on_keyboard(unsigned char key, int x, int y) {
         		break;
         	pressed_enter = 1;
         	current_move_index = 0;
-			change_key_pressed(array_of_moves[current_move_index]);
+        	current_pressed_key = array_of_moves[current_move_index];
+			// change_key_pressed(array_of_moves[current_move_index]);
         	// animation_ongoing = 1;
         	// glutTimerFunc(TIMER_INTERVAL, on_timer, TIMER_ID);
         	glutTimerFunc(TIMER_INTERVAL, on_timer, TIMER_ID_CAMERA_IN);
@@ -605,6 +654,7 @@ void on_keyboard(unsigned char key, int x, int y) {
           break;
     }
 }
+// TODO spreci da se desava on oza kamerom zoom in out
 
 void on_timer(int id) {
     
@@ -638,35 +688,44 @@ void on_timer(int id) {
 		{
 			animation_parameter = 0;
 			animation_ongoing = 0;
-			if (pressed_w)
-				previous_tile_z++;
-			if (pressed_a)
-				previous_tile_x++;
-			if (pressed_s)
-				previous_tile_z--;
-			if (pressed_d)
-				previous_tile_x--;
+			if (current_pressed_key != 'e')
+				previous_pressed_key = current_pressed_key;
+			switch(current_pressed_key)
+			{
+				case 'w':
+					previous_tile_z++;
+					break;
+				case 'a':
+					previous_tile_x++;
+					break;
+				case 's':
+					previous_tile_z--;
+					break;
+				case 'd':
+					previous_tile_x--;
+					break;
+			}
 			
 			// TODO change
 			is_current_special_activated = 0;
 		}
 		else {
-			if (pressed_w)
+			switch(current_pressed_key)
 			{
-				camera_parameter_z += 0.08;
+				case 'w':
+					camera_parameter_z += 0.08;
+					break;
+				case 'a':
+					camera_parameter_x -= 0.08;
+					break;
+				case 's':
+					camera_parameter_z -= 0.08;
+					break;
+				case 'd':
+					camera_parameter_x += 0.08;
+					break;
 			}
-			if (pressed_a)
-			{
-				camera_parameter_x -= 0.08;
-			}
-			if (pressed_s)
-			{
-				camera_parameter_z -= 0.08;
-			}
-			if (pressed_d)
-			{
-				camera_parameter_x += 0.08;
-			}
+			
 			animation_parameter += 0.03;	
 		}
 		
@@ -677,6 +736,7 @@ void on_timer(int id) {
 		if(check_all_specials_activated())
 		{
 			printf("Level Complete!\n");
+			// previous_pressed_key = current_pressed_key;
 			// TODO move all initializations to level set up method so that everything's reset properly
 		}
 		else 
@@ -685,6 +745,7 @@ void on_timer(int id) {
 			char current = array_of_moves[current_move_index];
 			if (current == '\0') 
 			{
+				// previous_pressed_key = current_pressed_key;
 				// do nothing
 			}
 			else // w a s d e
@@ -705,7 +766,11 @@ void on_timer(int id) {
 					} 
 				}
 				
-				change_key_pressed(array_of_moves[current_move_index]);
+				// I don't want to change previous to e, it's supposed to keep track of the last movement thingie
+				if (current_pressed_key != 'e')
+					previous_pressed_key = current_pressed_key;
+				
+				current_pressed_key = array_of_moves[current_move_index];
 				animation_ongoing = 1;
 				animation_parameter = 0;
 				glutTimerFunc(TIMER_INTERVAL,on_timer,TIMER_ID);
@@ -733,34 +798,5 @@ int check_all_specials_activated()
 	return 1;
 }
 
-void change_key_pressed(char key)
-{
-	pressed_a = 0;
-	pressed_w = 0;
-	pressed_s = 0;
-	pressed_d = 0;
-        	
-	switch(key) {
-        case 'w':
-        case 'W': 
-        	pressed_w = 1;
-            break;
-        case 's': 
-        case 'S':
-        	pressed_s = 1;
-            break;
-        case 'a':
-        case 'A':
-        	pressed_a = 1;
-            break;
-        case 'd':
-        case 'D':
-        	pressed_d = 1;
-        	break;  
-        case 27:
-          exit(0);
-          break;
-    }
-}
-    
+// TODO mozda bi bilo pametno da se umesto flegova koristi karakter za to sta je pritisnuto :/
 
