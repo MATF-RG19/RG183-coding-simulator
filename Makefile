@@ -1,10 +1,14 @@
 PROGRAM   = AnotherHourOfCode
 CC        = gcc
 CFLAGS    = -g -Wall
+DEPS      = figure.h carpet.h
 LDFLAGS   = -lGL -lGLU -lglut -lm
 
-$(PROGRAM): main.o
-	$(CC) -o $(PROGRAM) main.o $(LDFLAGS)
+%.o: %.c $(DEPS)
+	$(CC) -c -o $@ $< $(CFLAGS)
+
+$(PROGRAM): main.o figure.o carpet.o
+	$(CC) -o $(PROGRAM) main.o figure.o carpet.o $(LDFLAGS)
 
 .PHONY: clean dist run
 

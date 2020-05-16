@@ -5,28 +5,22 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <limits.h>
+#include "figure.h"
+#include "carpet.h"
 
 #define TIMER_INTERVAL 10
 #define TIMER_ID 0
 #define TIMER_ID_CAMERA_OUT 1
 #define TIMER_ID_CAMERA_IN 2
-#define RANDOM_ARRAY_LENGTH 120
-#define TRIANGLE_OPTIMIZATION_ARRAY_LENGTH 100
-
-#define PI 3.1415926535897
 
 #define MAX_NUM_MOVES 200
 
 // TODO add animation and failure when the figure falls off the tiles
-// TODO remove carpet from final level since the chicken is evaporating :C
-
 
 static void on_display();
 static void on_reshape(int width, int height);
-void draw_girl(void);
 void draw_boy(void);
 void draw_floor();
-void draw_triangle_carpet(void);
 void on_keyboard(unsigned char key, int x, int y);
 static void on_timer(int id);
 void change_key_pressed(char);
@@ -52,7 +46,7 @@ float y = 0;
 int previous_tile_z = 0;
 int previous_tile_x = 0;
 
-char array_of_moves[MAX_NUM_MOVES];
+unsigned char array_of_moves[MAX_NUM_MOVES];
 int current_move_index = 0;
 
 int pressed_enter = 0;
@@ -86,7 +80,7 @@ typedef struct special_tile_struct {
 	int activated;
 } special_tile;
 special_tile array_special_tiles[15];
-simple_tile array_simple_tiles[100];
+simple_tile array_simple_tiles[150];
 
 int main(int argc, char **argv){
     glutInit(&argc, argv);
@@ -341,201 +335,11 @@ void on_display() {
     glutSwapBuffers();
 }
 
-void draw_girl()
-{ 
-	glPushAttrib(GL_LIGHTING_BIT);
-	
-	x = previous_tile_x*(-3.75);
-	z = previous_tile_z*(-3.75);
-	y = sin(animation_parameter * PI);
-	
-	float level_failed_head_translation_x = 0;
-	float level_failed_head_translation_y = 0;
-	float level_failed_head_translation_z = 0;
-	
-	float extra_static_rotation = 0;
-	float extra_dynamic_rotation = 0;
-	
-	switch (current_pressed_key)
-	{
-		case 'w':
-			z += animation_parameter*(-3.75);
-			break;
-		case 'a':
-			x += animation_parameter*(-3.75);
-			break;
-		case 's':
-			z += animation_parameter*(3.75);
-			break;
-		case 'd':
-			x += animation_parameter*(3.75);
-			break;
-	}
-	
-	switch (previous_pressed_key)
-	{
-		case 'w':
-			switch (current_pressed_key)
-			{
-				case 'a':
-					extra_dynamic_rotation = animation_parameter*90; 
-					break;
-				case 's':
-					extra_dynamic_rotation = animation_parameter*180; 
-					break;
-				case 'd':
-					extra_dynamic_rotation = -animation_parameter*90;
-					break;
-			}
-			level_failed_head_translation_x = 0;
-			level_failed_head_translation_y = -0.3*animation_parameter;
-			level_failed_head_translation_z = -0.3*animation_parameter;
-			break;
-		case 'a':
-			extra_static_rotation = 90;
-			switch (current_pressed_key)
-			{
-				case 'w':
-					extra_dynamic_rotation = -animation_parameter*90; 
-					break;
-				case 's':
-					extra_dynamic_rotation = animation_parameter*90; 
-					break;
-				case 'd':
-					extra_dynamic_rotation = animation_parameter*180;
-					break;
-			}
-			level_failed_head_translation_x = -0.3*animation_parameter;
-			level_failed_head_translation_y = -0.3*animation_parameter;
-			level_failed_head_translation_z = 0;
-			break;
-		case 's':
-			extra_static_rotation = 180;
-			switch (current_pressed_key)
-			{
-				case 'w':
-					extra_dynamic_rotation = animation_parameter*180; 
-					break;
-				case 'a':
-					extra_dynamic_rotation = -animation_parameter*90; 
-					break;
-				case 'd':
-					extra_dynamic_rotation = animation_parameter*90;
-					break;
-			}
-			level_failed_head_translation_x = 0;
-			level_failed_head_translation_y = -0.3*animation_parameter;
-			level_failed_head_translation_z = 0.3*animation_parameter;
-			break;
-		case 'd':
-			extra_static_rotation = 270;
-			switch (current_pressed_key)
-			{
-				case 'w':
-					extra_dynamic_rotation = animation_parameter*90; 
-					break;
-				case 'a':
-					extra_dynamic_rotation = animation_parameter*180; 
-					break;
-				case 's':
-					extra_dynamic_rotation = -animation_parameter*90;
-					break;
-			}
-			level_failed_head_translation_x = 0.3*animation_parameter;
-			level_failed_head_translation_y = -0.3*animation_parameter;
-			level_failed_head_translation_z = 0;
-			break;
-		default:
-			break;
-	}	
-	
-	GLfloat mat_ambient[] ={ 0.7, 0.0, 0.2, 1.0f };
-	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
-
-	if (level_failed)
-	{
-		y = 0;
-	}
-	
-	if (is_current_special_activated)
-	{
-		if (!last_special_tile_activated)
-		{
-			y = 0;
-		}
-		
-		/* body */
-		glPushMatrix();
-			glTranslatef(x, y + 0.6, z);
-			glRotatef(25,0,1,0);
-			glRotatef(90,0,0,1);
-			glScalef(1.3,1.3,1.3);
-			glRotatef(animation_parameter*130,1,0,0);
-			glutSolidTetrahedron();
-		glPopMatrix();
-		
-	}
-	else 
-	{
-		/* body */
-		glPushMatrix();
-			glTranslatef(x, y + 0.6, z);
-			glRotatef(25,0,1,0);
-			glRotatef(90,0,0,1);
-			glScalef(1.3,1.3,1.3);
-			glRotatef(extra_dynamic_rotation,1,0,0); 
-			glRotatef(extra_static_rotation, 1,0,0);
-			glutSolidTetrahedron();
-		glPopMatrix();
-	}
-	
-	/* head */
-	glPushMatrix();
-		glTranslatef(x,y + 2.1, z);
-		if (level_failed)
-		{
-			glTranslatef(level_failed_head_translation_x, level_failed_head_translation_y, level_failed_head_translation_z);
-			glRotatef(animation_parameter*90,0,1,0);
-		}
-		glScalef(0.65,0.65,0.65);
-		glutSolidSphere(1, 16, 16);
-	glPopMatrix();
-	
-	/* hair */
-	glPushMatrix();
-		glTranslatef(x,y,z);
-		glRotatef(extra_dynamic_rotation,0,1,0); 
-		glRotatef(extra_static_rotation, 0,1,0);
-		if (level_failed)
-		{
-			glRotatef(-20*animation_parameter, 1,0,0);
-			glTranslatef(level_failed_head_translation_x, level_failed_head_translation_y, level_failed_head_translation_z);	
-		}
-		glTranslatef(0.6,2.5,0.5);
-		glScalef(0.2,0.2,0.2);
-		glutSolidSphere(1, 16, 16);
-	glPopMatrix();
-	glPushMatrix();
-		glTranslatef(x,y,z);
-		glRotatef(extra_dynamic_rotation,0,1,0); 
-		glRotatef(extra_static_rotation, 0,1,0);
-		if (level_failed)
-		{
-			glRotatef(-20*animation_parameter*level_failed, 1,0,0);
-			glTranslatef(level_failed_head_translation_x, level_failed_head_translation_y, level_failed_head_translation_z);
-		}
-		glTranslatef(-0.6,2.5,0.5);
-		glScalef(0.2,0.2,0.2);
-		glutSolidSphere(1, 16, 16);
-	glPopMatrix();
-	
-	glPopAttrib();
-}
-
 void draw_boy()
 {
-	glPushAttrib(GL_LIGHTING_BIT);
 	/*
+	glPushAttrib(GL_LIGHTING_BIT);
+	
 	x = previous_tile_x*(-3.75);
 	z = previous_tile_z*(-3.75);
 	y = sin(animation_parameter * PI);
@@ -552,14 +356,12 @@ void draw_boy()
 	GLfloat mat_ambient[] ={ 0.05, 0.0, 1, 1.0f };
 	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
 
-	/* body */
 	glPushMatrix();
     	glTranslatef(x,y + 1.3,z);
     	glScalef(1.3,1.2,1);
     	glutSolidCube(1);
     glPopMatrix();
     
-    /* legs */
     glPushMatrix();
     	glTranslatef(x - 0.34,y + 0.5,z);
     	glScalef(0.6,0.6,1);
@@ -572,14 +374,12 @@ void draw_boy()
     	glutSolidCube(1);
     glPopMatrix();
     
-    /* head */
     glPushMatrix();
     	glTranslatef(x,y +2.4,z);
     	glScalef(0.65,0.65,0.65);
     	glutSolidSphere(1, 16, 16);
     glPopMatrix();
     
-    /* hair */
     glPushMatrix();
     	glTranslatef(x,y +3.2, z);
     	glScalef(0.2,0.2,0.2);
@@ -587,6 +387,8 @@ void draw_boy()
     glPopMatrix();
     
     glPopAttrib();
+    
+    */
 }
 
 void draw_floor()
@@ -667,78 +469,6 @@ void draw_floor()
     glPopAttrib();
 }
 
-void draw_triangle_carpet()
-{
-	glPushAttrib(GL_LIGHTING_BIT);
-
-	/* GLfloat mat_ambient[] ={ 1, 0.0, 1, 1.0f }; */
-	GLfloat mat_ambient[] ={ 0.1, 1, 0.1, 1.0f };
-	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
-
-	glPushMatrix();
-	glScalef(0.5,0.5,0.5);
-	
-	int x;
-	int z;
-	int index_of_random_array = 0;
-	
-	float triangle_optimization_array[TRIANGLE_OPTIMIZATION_ARRAY_LENGTH];
-	
-	int triangle_optimization_array_position = 0;
-	for(x = -70; x < 70; x = x + 4)
-	{
-		for(z = -70; z < 70; z = z + 4)
-		{
-			if (index_of_random_array == RANDOM_ARRAY_LENGTH - 4)
-				index_of_random_array = 0;
-			float random_position = random_array[index_of_random_array++];
-			float position_z = z - random_position;
-			float position_x = x + random_position;
-			
-			if (triangle_optimization_array_position == TRIANGLE_OPTIMIZATION_ARRAY_LENGTH)
-			{
-				int group_index;
-				int number_of_groups = 4;
-				int i;
-				GLfloat mat_ambient_1[] ={ 0.1, 1, 0.1, 1.0f };
-				glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient_1);
-				
-				GLfloat mat_ambient_2[] ={ 1, 1, 0.3, 1.0f };
-				
-				for(group_index = 0; group_index < number_of_groups*2; group_index = group_index + 2)
-				{
-					// when we're done with drawing the first "half" of the triangles we want to change the color
-					if (group_index == number_of_groups)
-					{
-						glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient_2);
-					}
-				
-					glPushMatrix();
-						glRotatef(90*random_array[index_of_random_array++], 0, 1, 0);
-						glBegin(GL_TRIANGLES);
-						for (i = group_index; i <= TRIANGLE_OPTIMIZATION_ARRAY_LENGTH; i = i + 8)
-						{	
-							glVertex3f(triangle_optimization_array[i],-0.4,triangle_optimization_array[i+1]);
-							glVertex3f(triangle_optimization_array[i],-0.4, triangle_optimization_array[i+1] - 0.7);
-							glVertex3f(triangle_optimization_array[i] + 0.7,-0.4,triangle_optimization_array[i+1]);
-						}
-						glEnd();
-					glPopMatrix();
-				}
-				
-				triangle_optimization_array_position = 0;
-			}
-			
-			triangle_optimization_array[triangle_optimization_array_position++] = position_x;
-			triangle_optimization_array[triangle_optimization_array_position++] = position_z;
-		}
-	}
-	
-	glPopMatrix();
-	
-	glPopAttrib();
-}
-
 void add_to_move_array(char move) 
 {
 	array_of_moves[current_move_index] = move;
@@ -781,15 +511,6 @@ void on_keyboard(unsigned char key, int x, int y) {
 			// change_key_pressed(array_of_moves[current_move_index]);
         	// animation_ongoing = 1;
         	// glutTimerFunc(TIMER_INTERVAL, on_timer, TIMER_ID);
-        	char priv = array_of_moves[0];
-        	int i = 0;
-        	while (priv != '\0')
-        	{
-        		printf("%c ", priv);
-        		i++;
-        		priv = array_of_moves[i];
-        	}
-        	printf("\n");
         	glutTimerFunc(TIMER_INTERVAL, on_timer, TIMER_ID_CAMERA_IN);
         	break;
         case 27:
