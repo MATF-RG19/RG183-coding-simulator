@@ -1,3 +1,10 @@
+/* ******************
+
+I am aware that this amount of extern variables defeats the purpose of separating the code into separate files,
+but it's far more readable this way than if I kept it all in one single file. 
+
+******************* */
+
 #include <GL/freeglut.h>
 #include <stdio.h>
 #include <math.h>
@@ -11,6 +18,10 @@ extern float x, y, z, animation_parameter;
 extern char current_pressed_key, previous_pressed_key;
 extern int is_current_special_activated, last_special_tile_activated, previous_tile_x, previous_tile_z, level_failed;
 
+float level_failed_head_translation_x = 0;
+float level_failed_head_translation_y = 0;
+float level_failed_head_translation_z = 0;
+
 void draw_girl()
 { 
 	glPushAttrib(GL_LIGHTING_BIT);
@@ -18,10 +29,6 @@ void draw_girl()
 	x = previous_tile_x*(-3.75);
 	z = previous_tile_z*(-3.75);
 	y = sin(animation_parameter * PI);
-	
-	float level_failed_head_translation_x = 0;
-	float level_failed_head_translation_y = 0;
-	float level_failed_head_translation_z = 0;
 	
 	float extra_static_rotation = 0;
 	float extra_dynamic_rotation = 0;
@@ -58,8 +65,8 @@ void draw_girl()
 					break;
 			}
 			level_failed_head_translation_x = 0;
-			level_failed_head_translation_y = -0.3*animation_parameter;
-			level_failed_head_translation_z = -0.3*animation_parameter;
+			level_failed_head_translation_y = -0.3;
+			level_failed_head_translation_z = -0.3;
 			break;
 		case 'a':
 			extra_static_rotation = 90;
@@ -75,8 +82,8 @@ void draw_girl()
 					extra_dynamic_rotation = animation_parameter*180;
 					break;
 			}
-			level_failed_head_translation_x = -0.3*animation_parameter;
-			level_failed_head_translation_y = -0.3*animation_parameter;
+			level_failed_head_translation_x = -0.3;
+			level_failed_head_translation_y = -0.3;
 			level_failed_head_translation_z = 0;
 			break;
 		case 's':
@@ -94,8 +101,8 @@ void draw_girl()
 					break;
 			}
 			level_failed_head_translation_x = 0;
-			level_failed_head_translation_y = -0.3*animation_parameter;
-			level_failed_head_translation_z = 0.3*animation_parameter;
+			level_failed_head_translation_y = -0.3;
+			level_failed_head_translation_z = 0.3;
 			break;
 		case 'd':
 			extra_static_rotation = 270;
@@ -111,8 +118,8 @@ void draw_girl()
 					extra_dynamic_rotation = -animation_parameter*90;
 					break;
 			}
-			level_failed_head_translation_x = 0.3*animation_parameter;
-			level_failed_head_translation_y = -0.3*animation_parameter;
+			level_failed_head_translation_x = 0.3;
+			level_failed_head_translation_y = -0.3;
 			level_failed_head_translation_z = 0;
 			break;
 		default:
@@ -164,8 +171,14 @@ void draw_girl()
 		glTranslatef(x,y + 2.1, z);
 		if (level_failed)
 		{
-			glTranslatef(level_failed_head_translation_x, level_failed_head_translation_y, level_failed_head_translation_z);
-			glRotatef(animation_parameter*90,0,1,0);
+			glTranslatef(level_failed_head_translation_x*animation_parameter, 
+						 level_failed_head_translation_y*animation_parameter,
+						 level_failed_head_translation_z*animation_parameter);
+			if (animation_parameter == 0)
+			{
+				glTranslatef(level_failed_head_translation_x, level_failed_head_translation_y, level_failed_head_translation_z);
+			}
+			// glRotatef(animation_parameter*90,0,1,0);
 		}
 		glScalef(0.65,0.65,0.65);
 		glutSolidSphere(1, 16, 16);
@@ -178,8 +191,11 @@ void draw_girl()
 		glRotatef(extra_static_rotation, 0,1,0);
 		if (level_failed)
 		{
-			glRotatef(-20*animation_parameter, 1,0,0);
-			glTranslatef(level_failed_head_translation_x, level_failed_head_translation_y, level_failed_head_translation_z);	
+			float parameter = animation_parameter == 0 ? 1 : animation_parameter;
+			glRotatef(-20*parameter, 1,0,0);
+			glTranslatef(level_failed_head_translation_x*parameter, 
+						 level_failed_head_translation_y*parameter,
+						 level_failed_head_translation_z*parameter);
 		}
 		glTranslatef(0.6,2.5,0.5);
 		glScalef(0.2,0.2,0.2);
@@ -191,8 +207,11 @@ void draw_girl()
 		glRotatef(extra_static_rotation, 0,1,0);
 		if (level_failed)
 		{
-			glRotatef(-20*animation_parameter*level_failed, 1,0,0);
-			glTranslatef(level_failed_head_translation_x, level_failed_head_translation_y, level_failed_head_translation_z);
+			float parameter = animation_parameter == 0 ? 1 : animation_parameter;
+			glRotatef(-20*parameter, 1,0,0);
+			glTranslatef(level_failed_head_translation_x*parameter, 
+						 level_failed_head_translation_y*parameter,
+						 level_failed_head_translation_z*parameter);
 		}
 		glTranslatef(-0.6,2.5,0.5);
 		glScalef(0.2,0.2,0.2);

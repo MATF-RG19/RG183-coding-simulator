@@ -7,8 +7,8 @@ LDFLAGS   = -lGL -lGLU -lglut -lm
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-$(PROGRAM): main.o figure.o carpet.o
-	$(CC) -o $(PROGRAM) main.o figure.o carpet.o $(LDFLAGS)
+$(PROGRAM): main.o figure.o floor_setup.o
+	$(CC) -o $(PROGRAM) main.o figure.o floor_setup.o $(LDFLAGS)
 
 .PHONY: clean dist run
 
