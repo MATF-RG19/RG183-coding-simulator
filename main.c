@@ -24,6 +24,7 @@ static void on_timer(int id);
 void change_key_pressed(char);
 int check_all_specials_activated();
 void reset_specials(void);
+int check_if_off_path(char move);
 int last_special_tile_activated = 0;
 
 /* used to keep track of the light source so a small cube acting as a 
@@ -63,6 +64,7 @@ int camera_look_at_y = 0;
 int camera_look_at_z = 0;
 int level_failed = 0;
 int is_final_level = 0;
+int has_wandered_off_the_path = 0;
 
 special_tile array_special_tiles[MAX_NUM_SPECIAL_TILES];
 simple_tile array_simple_tiles[MAX_NUM_SIMPLE_TILES];
@@ -238,8 +240,43 @@ void on_keyboard(unsigned char key, int x, int y) {
           break;
     }
 }
-// TODO spreci da se desava on oza kamerom zoom in out
 
+int check_if_off_path(char move)
+{
+	int x_to_check = previous_tile_x;
+	int z_to_check = previous_tile_z;
+	
+	// have to check both special and simple tiles
+	int current_special_index = 0;
+	while (array_special_tiles[current_special_index].x != INT_MAX)
+	{
+		special_tile current_special = array_special_tiles[current_special_index];
+		if (current_special.x == -x_to_check && current_special.z == -z_to_check)
+		{
+			return 0;
+		}
+		current_special_index++;
+	} 
+	
+	int current_simple_index = 0;
+	while (array_simple_tiles[current_simple_index].x != INT_MAX)
+	{
+		simple_tile current_simple = array_simple_tiles[current_simple_index];
+		if (current_simple.x == -x_to_check && current_simple.z == -z_to_check)
+		{
+			return 0;
+		}
+		current_simple_index++;
+	} 
+	
+	// couldn't find a tile (either special or simple) that had those coordinates
+	// i.e. the figure wandered off the path
+	has_wandered_off_the_path = 1;
+	
+	return 1;
+}
+
+// TODO spreci da se desava on oza kamerom zoom in out
 void on_timer(int id) {
     
     if (id == TIMER_ID_CAMERA_OUT)
@@ -346,9 +383,14 @@ void on_timer(int id) {
 		if(check_all_specials_activated())
 		{
 			printf("Level Complete!\n");
+			if (is_final_level)
+			{
+				is_final_level = 1;
+			}
 			// previous_pressed_key = current_pressed_key;
 			// TODO move all initializations to level set up method so that everything's reset properly
-			set_arena_for_level(++current_level);
+			else 
+				set_arena_for_level(++current_level);
 		}
 		else
 		{
@@ -362,6 +404,7 @@ void on_timer(int id) {
 				animation_ongoing = 1;
 				animation_parameter = 0;
 				current_pressed_key = '\0';
+				
 				glutTimerFunc(TIMER_INTERVAL,on_timer,TIMER_ID);
 			}
 			// TODO resi bag gde ne radi e ako je e prvi tile
@@ -385,13 +428,26 @@ void on_timer(int id) {
 				}
 				
 				// I don't want to change previous to e, it's supposed to keep track of the last movement thingie
-				if (current_pressed_key != 'e')
-					previous_pressed_key = current_pressed_key;
-				
-				current_pressed_key = current;
-				animation_ongoing = 1;
-				animation_parameter = 0;
-				glutTimerFunc(TIMER_INTERVAL,on_timer,TIMER_ID);
+				if(check_if_off_path(current_pressed_key))
+				{
+					level_failed = 1;
+					animation_ongoing = 1;
+					animation_parameter = 0;
+					current_pressed_key = '\0';
+					
+					glutTimerFunc(TIMER_INTERVAL,on_timer,TIMER_ID);
+				}
+				else {
+					if (current_pressed_key != 'e')
+					{
+						previous_pressed_key = current_pressed_key;
+					}
+					
+					current_pressed_key = current;
+					animation_ongoing = 1;
+					animation_parameter = 0;
+					glutTimerFunc(TIMER_INTERVAL,on_timer,TIMER_ID);
+				}
 			}
 		}
 	}
@@ -427,6 +483,7 @@ void reset_specials()
 
 void set_arena_for_level(int level)
 {
+	has_wandered_off_the_path = 0;
 	last_special_tile_activated = 0;
 	is_current_special_activated = 0;
 	level_failed = 0;
@@ -530,7 +587,7 @@ void set_arena_for_level(int level)
 			camera_stops_at_y = 20;
 			camera_stops_at_z = 35;
 			camera_look_at_x = 3;
-			camera_look_at_y = 0;
+			camera_look_at_y = 1;
 			camera_look_at_z = 3;
 			break;
 		case 5:
