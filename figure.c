@@ -21,6 +21,14 @@ float level_failed_head_translation_x = 0;
 float level_failed_head_translation_y = 0;
 float level_failed_head_translation_z = 0;
 
+float head_translation_x = 0;
+float head_translation_y = 0;
+float head_translation_z = 0;
+
+float hair_translation_x = 0;
+float hair_translation_y = 0;
+float hair_translation_z = 0;
+
 void draw_girl()
 { 
 	glPushAttrib(GL_LIGHTING_BIT);
@@ -131,31 +139,63 @@ void draw_girl()
 	if (game_complete)
 	{
 		y = 0;
-		level_failed_head_translation_x = 0;
-		level_failed_head_translation_y = 0;
-		level_failed_head_translation_z = 0;
+		head_translation_x = 0;
+		head_translation_y = 0;
+		head_translation_z = 0;
+		
+		hair_translation_x = 0;
+		hair_translation_y = 0;
+		hair_translation_z = 0;
 		
 		switch(game_complete_animation_stage)
 		{
 			case 0:
+			case 6:
 				extra_static_rotation = 190;
 				extra_dynamic_rotation = animation_parameter*30;
 				break;
 			case 1:
+			case 7:
 				extra_static_rotation = 220;
-				level_failed_head_translation_x = 0.3;
-				level_failed_head_translation_y = -0.3;
-				level_failed_head_translation_z = 0.3;
+				head_translation_x = 0.3;
+				head_translation_y = -0.3;
+				head_translation_z = 0.3;
+				
+				hair_translation_x = -2*head_translation_x;
+				hair_translation_y = 1.5*head_translation_y;
+				hair_translation_z = 2*head_translation_z;
 				break;
 			case 2:
+			case 8:
 				extra_static_rotation = 220;
 				extra_dynamic_rotation = animation_parameter*(-50);
 				break;
 			case 3:
+			case 9:
 				extra_static_rotation = 170;
-				level_failed_head_translation_x = -0.3;
-				level_failed_head_translation_y = -0.3;
-				level_failed_head_translation_z = 0.3;
+				head_translation_x = -0.3;
+				head_translation_y = -0.3;
+				head_translation_z = 0.3;
+				
+				hair_translation_x = -2*head_translation_x;
+				hair_translation_y = 1.5*head_translation_y;
+				hair_translation_z = 2*head_translation_z;
+				break;
+			case 4:
+			case 10:
+				extra_static_rotation = 170;
+				extra_dynamic_rotation = animation_parameter*(20);
+				break;
+			case 5:
+				extra_static_rotation = 190;
+				head_translation_x = -0.05;
+				head_translation_y = -0.3;
+				head_translation_z = 0.3;
+				
+				hair_translation_x = -3*head_translation_x;
+				hair_translation_y = head_translation_y;
+				hair_translation_z = head_translation_z;
+				
 				break;
 		}
 		
@@ -175,9 +215,9 @@ void draw_girl()
 		/* head */
 		glPushMatrix();
 			glTranslatef(x,y + 2.1, z);
-			glTranslatef(level_failed_head_translation_x * animation_parameter, 
-						 level_failed_head_translation_y * animation_parameter,
-						 level_failed_head_translation_z * animation_parameter);
+			glTranslatef(head_translation_x * animation_parameter, 
+						 head_translation_y * animation_parameter,
+						 head_translation_z * animation_parameter);
 			glScalef(0.65,0.65,0.65);
 			glutSolidSphere(1, 16, 16);
 		glPopMatrix();
@@ -187,9 +227,9 @@ void draw_girl()
 			glTranslatef(x,y,z);
 			glRotatef(extra_dynamic_rotation,0,1,0); 
 			glRotatef(extra_static_rotation, 0,1,0);
-			glTranslatef(-2*level_failed_head_translation_x*animation_parameter, 
-						 1.5*level_failed_head_translation_y*animation_parameter,
-						 2*level_failed_head_translation_z*animation_parameter);
+			glTranslatef(hair_translation_x*animation_parameter, 
+						 hair_translation_y*animation_parameter,
+						 hair_translation_z*animation_parameter);
 			glTranslatef(0.6,2.5,0.5);
 			glScalef(0.2,0.2,0.2);
 			glutSolidSphere(1, 16, 16);
@@ -198,9 +238,9 @@ void draw_girl()
 			glTranslatef(x,y,z);
 			glRotatef(extra_dynamic_rotation,0,1,0); 
 			glRotatef(extra_static_rotation, 0,1,0);
-			glTranslatef(-2*level_failed_head_translation_x*animation_parameter, 
-						 1.5*level_failed_head_translation_y*animation_parameter,
-						 2*level_failed_head_translation_z*animation_parameter);
+			glTranslatef(hair_translation_x*animation_parameter, 
+						 hair_translation_y*animation_parameter,
+						 hair_translation_z*animation_parameter);
 			glTranslatef(-0.6,2.5,0.5);
 			glScalef(0.2,0.2,0.2);
 			glutSolidSphere(1, 16, 16);

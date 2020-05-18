@@ -14,9 +14,6 @@
 #define TIMER_ID_CAMERA_IN 2
 #define TIMER_ID_GAME_COMPLETE 3
 
-// TODO add animation and failure when the figure falls off the tiles
-// TODO add reset button
-
 static void on_display();
 void set_arena_for_level(int level);
 static void on_reshape(int width, int height);
@@ -31,9 +28,9 @@ int last_special_tile_activated = 0;
 
 /* used to keep track of the light source so a small cube acting as a 
    lightbulb can be drawn to more easily see where the light is coming from */
-static int light_x = 3;
-static int light_y = 4;
-static int light_z = -5;
+static int light_x = -4; //3
+static int light_y = 5; //4
+static int light_z = -3; //-5
 
 float random_array[RANDOM_ARRAY_LENGTH];
 float animation_parameter = 0;
@@ -67,7 +64,7 @@ int camera_look_at_z = 0;
 int level_failed = 0;
 int is_final_level = 0;
 int has_wandered_off_the_path = 0;
-int game_complete = 1;
+int game_complete = 0;
 int game_complete_animation_stage = 0;
 
 special_tile array_special_tiles[MAX_NUM_SPECIAL_TILES];
@@ -142,27 +139,27 @@ void on_display() {
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    
-	// TODO change this from magic numbers to something normal
-	
-      
-    float camera_location_x = 18 - camera_parameter_in_out*(camera_stops_at_x - 18) + camera_parameter_x;
-	float camera_location_y = 16 + camera_parameter_in_out*(camera_stops_at_y - 16);
-	float camera_location_z = 22 + camera_parameter_in_out*(camera_stops_at_x - 22) - camera_parameter_z;  
-	
-	/*
-	gluLookAt(camera_location_x, camera_location_y, camera_location_z,
-	
-			  0 + camera_parameter_x + camera_parameter_in_out*camera_look_at_x, 0 + camera_parameter_in_out*camera_look_at_y, 0 - camera_parameter_in_out*camera_look_at_z - camera_parameter_z,
-			  
-			  0, 1, 0);
-*/
-	gluLookAt(6, 6, 20,
-	
-			  3, 1, 0,
-			  
-			  0, 1, 0);
-              
+
+	if (game_complete)
+	{
+		gluLookAt(6, 6, 20,
+			  	  3, 1, 0,
+			      0, 1, 0);
+	}
+	else 
+	{
+		float camera_location_x = 18 - camera_parameter_in_out*(camera_stops_at_x - 18) + camera_parameter_x;
+		float camera_location_y = 16 + camera_parameter_in_out*(camera_stops_at_y - 16);
+		float camera_location_z = 22 + camera_parameter_in_out*(camera_stops_at_x - 22) - camera_parameter_z;  
+		
+		
+		gluLookAt(camera_location_x, camera_location_y, camera_location_z,
+		
+				  0 + camera_parameter_x + camera_parameter_in_out*camera_look_at_x, 0 + camera_parameter_in_out*camera_look_at_y, 0 - camera_parameter_in_out*camera_look_at_z - camera_parameter_z,
+				  
+				  0, 1, 0);
+	}
+
     if (!pressed_enter)
     {
 		glPushAttrib(GL_LIGHTING_BIT);
@@ -175,26 +172,42 @@ void on_display() {
 		glPopAttrib();
 	}
 	
-	
+	/* draw light bulb if needed */
+	/*
     glPushMatrix();
     	glTranslatef(light_x, light_y, light_z);
     	glutSolidCube(0.2);
     glPopMatrix();
-    draw_game_complete();
-        glPushMatrix();
+    */
+    if (!is_final_level)
+    {
+		GLfloat ambient1[] ={ 0.1, 1, 0.1, 1.0f };
+		GLfloat ambient2[] ={ 1, 1, 0.3, 1.0f };
+		draw_triangle_carpet(ambient1, ambient2);
+	}
+	else 
+	{
+		// add special carpet for final level
+	}
+	
+	if (game_complete)
+	{
+		GLfloat ambient1[] ={ 1, 1, 1, 1.0f };
+		GLfloat ambient2[] ={ 1, 1, 0.3, 1.0f };
+		draw_triangle_carpet(ambient1, ambient2);
+		draw_game_complete();
+		glPushMatrix();
 			glTranslatef(1, 0, 0);   
 			draw_girl();    
-        glPopMatrix(); 
-       
-        /*
-        glPushMatrix();
-        glPopMatrix(); 
-        draw_floor();
-        if (!is_final_level)
-        {
-        	draw_triangle_carpet();
-		}
-	*/
+		glPopMatrix();
+	}
+	else 
+	{
+	// TODO change this from magic numbers to something normal
+		draw_floor();
+		draw_girl(); 
+	}
+		 
     glPopMatrix();
 
     glutSwapBuffers();
@@ -241,15 +254,16 @@ void on_keyboard(unsigned char key, int x, int y) {
         		set_arena_for_level(current_level);
         	}
         	break;
+        case 'g':
+        	// TODO remove, temporary addition of God Mode
+        	set_arena_for_level(++current_level);
+        	break;
         case 13: // code for ENTER
         	if (pressed_enter) 
         		break;
         	pressed_enter = 1;
         	if (game_complete)
         	{
-        		animation_ongoing = 1;
-        		animation_parameter = 0;
-        		glutTimerFunc(TIMER_INTERVAL, on_timer, TIMER_ID_GAME_COMPLETE);
         		break;
         	}
         	current_move_index = 0;
@@ -379,7 +393,7 @@ void on_timer(int id) {
     	if (animation_parameter >= 1)
     	{	
     		game_complete_animation_stage++;
-    		if (game_complete_animation_stage == 4)
+    		if (game_complete_animation_stage == 11)
     		{
     			game_complete_animation_stage = 0;
     		}
@@ -474,6 +488,10 @@ void on_timer(int id) {
 			if (is_final_level)
 			{
 				game_complete = 1;
+				animation_parameter = 1;
+				animation_parameter = 0;
+				set_arena_for_level(1);
+				glutTimerFunc(TIMER_INTERVAL,on_timer,TIMER_ID_GAME_COMPLETE);
 			}
 			// previous_pressed_key = current_pressed_key;
 			// TODO move all initializations to level set up method so that everything's reset properly
@@ -642,7 +660,7 @@ void set_arena_for_level(int level)
 
 	switch(level)
 	{
-		case 1:
+		case 1: // straight line
 			camera_parameter_in_out_max = 0.7;
 			camera_stops_at_x = 21;
 			camera_stops_at_y = 28;
@@ -651,7 +669,7 @@ void set_arena_for_level(int level)
 			camera_look_at_y = 0;
 			camera_look_at_z = 5;
 			break;
-		case 2:
+		case 2: // turn right
 			camera_parameter_in_out_max = 1;
 			camera_stops_at_x = 21;
 			camera_stops_at_y = 20;
@@ -660,7 +678,7 @@ void set_arena_for_level(int level)
 			camera_look_at_y = 0;
 			camera_look_at_z = 3;
 			break;
-		case 3:
+		case 3: // cross
 			camera_parameter_in_out_max = 1;
 			camera_stops_at_x = 21;
 			camera_stops_at_y = 20;
@@ -669,7 +687,7 @@ void set_arena_for_level(int level)
 			camera_look_at_y = 0;
 			camera_look_at_z = 3;
 			break;
-		case 4:
+		case 4: // tuning-fork looking thing
 			camera_parameter_in_out_max = 1;
 			camera_stops_at_x = 21;
 			camera_stops_at_y = 20;
@@ -678,7 +696,7 @@ void set_arena_for_level(int level)
 			camera_look_at_y = 1;
 			camera_look_at_z = 3;
 			break;
-		case 5:
+		case 5: // cactus
 			camera_parameter_in_out_max = 1;
 			camera_stops_at_x = 21;
 			camera_stops_at_y = 20;
@@ -687,7 +705,7 @@ void set_arena_for_level(int level)
 			camera_look_at_y = 0;
 			camera_look_at_z = 3;
 			break;	
-		case 6:
+		case 6: // heart
 			camera_parameter_in_out_max = 1.6;
 			camera_stops_at_x = 26;
 			camera_stops_at_y = 25;
@@ -696,7 +714,34 @@ void set_arena_for_level(int level)
 			camera_look_at_y = 0;
 			camera_look_at_z = 4;
 			break;	
-		case 7:
+		case 7: // mug
+			camera_parameter_in_out_max = 2.4;
+			camera_stops_at_x = 26;
+			camera_stops_at_y = 25;
+			camera_stops_at_z = 50;
+			camera_look_at_x = 5;
+			camera_look_at_y = 0;
+			camera_look_at_z = 4;
+			break;
+		case 8: // gameboy
+			camera_parameter_in_out_max = 2.8;
+			camera_stops_at_x = 26;
+			camera_stops_at_y = 25;
+			camera_stops_at_z = 40;
+			camera_look_at_x = 0;
+			camera_look_at_y = 0;
+			camera_look_at_z = 4;
+			break;
+		case 9: // deer
+			camera_parameter_in_out_max = 2.8;
+			camera_stops_at_x = 26;
+			camera_stops_at_y = 25;
+			camera_stops_at_z = 40;
+			camera_look_at_x = 0.5;
+			camera_look_at_y = 0;
+			camera_look_at_z = 4;
+			break;
+		case 10: // CHICKEN
 			is_final_level = 1;
 			camera_parameter_in_out_max = 3.2;
 			camera_stops_at_x = 30;
@@ -710,4 +755,8 @@ void set_arena_for_level(int level)
 	
 	glutPostRedisplay();
 }
+
+// TODO try to move the triangle carpet up
+// TODO mvoe the move ispis negde levlje
+// TODO ne vidi se teskts na mug
 

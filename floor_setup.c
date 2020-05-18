@@ -29,12 +29,9 @@ extern FILE* level_file;
 extern special_tile array_special_tiles[MAX_NUM_SPECIAL_TILES];
 extern simple_tile array_simple_tiles[MAX_NUM_SIMPLE_TILES];
 
-void draw_triangle_carpet()
+void draw_triangle_carpet(GLfloat ambient1[4], GLfloat ambient2[4])
 {
 	glPushAttrib(GL_LIGHTING_BIT);
-
-	GLfloat mat_ambient[] ={ 0.1, 1, 0.1, 1.0f };
-	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
 
 	glPushMatrix();
 	glScalef(0.5,0.5,0.5);
@@ -61,17 +58,17 @@ void draw_triangle_carpet()
 				int group_index;
 				int number_of_groups = 4;
 				int i;
-				GLfloat mat_ambient_1[] ={ 0.1, 1, 0.1, 1.0f };
-				glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient_1);
+				// GLfloat mat_ambient_1[] ={ 0.1, 1, 0.1, 1.0f };
+				glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient1);
 				
-				GLfloat mat_ambient_2[] ={ 1, 1, 0.3, 1.0f };
+				// GLfloat mat_ambient_2[] ={ 1, 1, 0.3, 1.0f };
 				
 				for(group_index = 0; group_index < number_of_groups*2; group_index = group_index + 2)
 				{
 					// when we're done with drawing the first "half" of the triangles we want to change the color
 					if (group_index == number_of_groups)
 					{
-						glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient_2);
+						glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient2);
 					}
 				
 					glPushMatrix();

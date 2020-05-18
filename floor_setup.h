@@ -17,7 +17,7 @@ typedef struct special_tile_struct {
 	int activated;
 } special_tile;
 
-void draw_triangle_carpet();
+void draw_triangle_carpet(GLfloat ambient1[4], GLfloat ambient2[4]);
 void draw_floor();
 void draw_special();
 #endif
