@@ -12,6 +12,7 @@
 #define TIMER_ID 0
 #define TIMER_ID_CAMERA_OUT 1
 #define TIMER_ID_CAMERA_IN 2
+#define TIMER_ID_GAME_COMPLETE 3
 
 // TODO add animation and failure when the figure falls off the tiles
 // TODO add reset button
@@ -22,9 +23,10 @@ static void on_reshape(int width, int height);
 void on_keyboard(unsigned char key, int x, int y);
 static void on_timer(int id);
 void change_key_pressed(char);
-int check_all_specials_activated();
+int check_all_specials_activated(void);
 void reset_specials(void);
 int check_if_off_path(char move);
+void draw_game_complete(void);
 int last_special_tile_activated = 0;
 
 /* used to keep track of the light source so a small cube acting as a 
@@ -65,6 +67,8 @@ int camera_look_at_z = 0;
 int level_failed = 0;
 int is_final_level = 0;
 int has_wandered_off_the_path = 0;
+int game_complete = 1;
+int game_complete_animation_stage = 0;
 
 special_tile array_special_tiles[MAX_NUM_SPECIAL_TILES];
 simple_tile array_simple_tiles[MAX_NUM_SIMPLE_TILES];
@@ -146,9 +150,16 @@ void on_display() {
 	float camera_location_y = 16 + camera_parameter_in_out*(camera_stops_at_y - 16);
 	float camera_location_z = 22 + camera_parameter_in_out*(camera_stops_at_x - 22) - camera_parameter_z;  
 	
+	/*
 	gluLookAt(camera_location_x, camera_location_y, camera_location_z,
 	
 			  0 + camera_parameter_x + camera_parameter_in_out*camera_look_at_x, 0 + camera_parameter_in_out*camera_look_at_y, 0 - camera_parameter_in_out*camera_look_at_z - camera_parameter_z,
+			  
+			  0, 1, 0);
+*/
+	gluLookAt(6, 6, 20,
+	
+			  3, 1, 0,
 			  
 			  0, 1, 0);
               
@@ -169,8 +180,13 @@ void on_display() {
     	glTranslatef(light_x, light_y, light_z);
     	glutSolidCube(0.2);
     glPopMatrix();
-    	draw_special();
-        draw_girl();
+    draw_game_complete();
+        glPushMatrix();
+			glTranslatef(1, 0, 0);   
+			draw_girl();    
+        glPopMatrix(); 
+       
+        /*
         glPushMatrix();
         glPopMatrix(); 
         draw_floor();
@@ -178,6 +194,7 @@ void on_display() {
         {
         	draw_triangle_carpet();
 		}
+	*/
     glPopMatrix();
 
     glutSwapBuffers();
@@ -228,6 +245,13 @@ void on_keyboard(unsigned char key, int x, int y) {
         	if (pressed_enter) 
         		break;
         	pressed_enter = 1;
+        	if (game_complete)
+        	{
+        		animation_ongoing = 1;
+        		animation_parameter = 0;
+        		glutTimerFunc(TIMER_INTERVAL, on_timer, TIMER_ID_GAME_COMPLETE);
+        		break;
+        	}
         	current_move_index = 0;
         	current_pressed_key = array_of_moves[current_move_index];
 			// change_key_pressed(array_of_moves[current_move_index]);
@@ -239,6 +263,53 @@ void on_keyboard(unsigned char key, int x, int y) {
           exit(0);
           break;
     }
+}
+
+void draw_game_complete(void)
+{	
+	glPushAttrib(GL_LIGHTING_BIT);
+	
+	GLfloat mat_ambient[] ={ 0.24725f, 0.1995f, 0.0745f, 1.0f };
+	GLfloat mat_diffuse[] ={0.75164f, 0.60648f, 0.22648f, 1.0f };
+	GLfloat mat_specular[] ={0.628281f, 0.555802f, 0.366065f, 1.0f };
+	GLfloat shine[] = {51.2f} ;
+	
+	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, shine);
+	
+	double plane[] = {0, -1, 0, 3.8};
+	glClipPlane(GL_CLIP_DISTANCE0, plane);
+	glEnable(GL_CLIP_DISTANCE0);
+
+	glPushMatrix();
+		glTranslatef(6, 3, 0);
+		glScalef(0.8, 1, 0.8);
+		glutSolidSphere(2, 32, 32);
+	glPopMatrix();
+	
+	glDisable(GL_CLIP_DISTANCE0);
+	
+	glPushMatrix();
+		glTranslatef(6, 0, 0);
+		glRotatef(-90, 1, 0, 0);
+		glutSolidCone(1.3, 1.5, 16, 16);
+	glPopMatrix();
+	
+	glPushMatrix();
+		glTranslatef(4.2, 2.7, 0);
+		glScalef(0.8, 1, 1);
+		glutSolidTorus(0.1,0.7,32,32);
+	glPopMatrix();
+	
+	glPushMatrix();
+		glTranslatef(7.7, 2.7, 0);
+		glScalef(0.8, 1, 1);
+		glutSolidTorus(0.1,0.7,32,32);
+	glPopMatrix();
+	
+	glPopAttrib();
 }
 
 int check_if_off_path(char move)
@@ -302,6 +373,23 @@ void on_timer(int id) {
     		glutTimerFunc(TIMER_INTERVAL, on_timer, TIMER_ID);
     	}
     	
+    }
+    else if (id == TIMER_ID_GAME_COMPLETE)
+    {
+    	if (animation_parameter >= 1)
+    	{	
+    		game_complete_animation_stage++;
+    		if (game_complete_animation_stage == 4)
+    		{
+    			game_complete_animation_stage = 0;
+    		}
+    		animation_parameter = 0;
+    	}
+    	else
+    	{
+    		animation_parameter += 0.02;
+    	}
+    	glutTimerFunc(TIMER_INTERVAL, on_timer, TIMER_ID_GAME_COMPLETE);
     }
     else if (animation_ongoing)
 	{
@@ -385,7 +473,7 @@ void on_timer(int id) {
 			printf("Level Complete!\n");
 			if (is_final_level)
 			{
-				is_final_level = 1;
+				game_complete = 1;
 			}
 			// previous_pressed_key = current_pressed_key;
 			// TODO move all initializations to level set up method so that everything's reset properly
