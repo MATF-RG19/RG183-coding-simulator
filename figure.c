@@ -14,7 +14,7 @@ but it's far more readable this way than if I kept it all in one single file.
 #include "figure.h"
 
 extern float x, y, z, animation_parameter;
-extern char current_pressed_key, previous_pressed_key;
+extern char current_pressed_key, previous_pressed_key, animation_ongoing;
 extern int is_current_special_activated, last_special_tile_activated, previous_tile_x, previous_tile_z, level_failed, game_complete, game_complete_animation_stage;
 
 float level_failed_head_translation_x = 0;
@@ -293,7 +293,7 @@ void draw_girl()
 				glTranslatef(level_failed_head_translation_x*animation_parameter, 
 							 level_failed_head_translation_y*animation_parameter,
 							 level_failed_head_translation_z*animation_parameter);
-				if (animation_parameter == 0)
+				if (animation_parameter == 0 && animation_ongoing == 0)
 				{
 					glTranslatef(level_failed_head_translation_x, level_failed_head_translation_y, level_failed_head_translation_z);
 				}

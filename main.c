@@ -557,6 +557,7 @@ void on_timer(int id) {
 			}
 		}
 	}
+	
 	glutPostRedisplay();
 }
 
