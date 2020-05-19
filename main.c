@@ -42,6 +42,8 @@ float x = 0;
 float y = 0;
 int previous_tile_z = 0;
 int previous_tile_x = 0;
+int raster_pos_x = 0;
+int raster_pos_y = 0;
 
 unsigned char array_of_moves[MAX_NUM_MOVES];
 int current_move_index = 0;
@@ -164,7 +166,7 @@ void on_display() {
     {
 		glPushAttrib(GL_LIGHTING_BIT);
 			glPushMatrix();
-				glRasterPos3i(-5, -8, 1);
+				glRasterPos3i(raster_pos_x, raster_pos_y, 1);
 				GLfloat mat_ambient[] ={ 1, 1, 1, 1 };
 				glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
 				glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, array_of_moves);
@@ -669,6 +671,8 @@ void set_arena_for_level(int level)
 			camera_look_at_x = 0;
 			camera_look_at_y = 0;
 			camera_look_at_z = 5;
+			raster_pos_x = -11;
+			raster_pos_y = -10;
 			break;
 		case 2: // turn right
 			camera_parameter_in_out_max = 1;
@@ -678,6 +682,8 @@ void set_arena_for_level(int level)
 			camera_look_at_x = 3;
 			camera_look_at_y = 0;
 			camera_look_at_z = 3;
+			raster_pos_x = -7;
+			raster_pos_y = -8;
 			break;
 		case 3: // cross
 			camera_parameter_in_out_max = 1;
@@ -687,6 +693,8 @@ void set_arena_for_level(int level)
 			camera_look_at_x = 0;
 			camera_look_at_y = 0;
 			camera_look_at_z = 3;
+			raster_pos_x = -7;
+			raster_pos_y = -8;
 			break;
 		case 4: // tuning-fork looking thing
 			camera_parameter_in_out_max = 1;
@@ -696,6 +704,8 @@ void set_arena_for_level(int level)
 			camera_look_at_x = 3;
 			camera_look_at_y = 1;
 			camera_look_at_z = 3;
+			raster_pos_x = -7;
+			raster_pos_y = -8;
 			break;
 		case 5: // cactus
 			camera_parameter_in_out_max = 1;
@@ -705,6 +715,8 @@ void set_arena_for_level(int level)
 			camera_look_at_x = 3;
 			camera_look_at_y = 0;
 			camera_look_at_z = 3;
+			raster_pos_x = -7;
+			raster_pos_y = -8;
 			break;	
 		case 6: // heart
 			camera_parameter_in_out_max = 1.6;
@@ -714,6 +726,8 @@ void set_arena_for_level(int level)
 			camera_look_at_x = 0;
 			camera_look_at_y = 0;
 			camera_look_at_z = 4;
+			raster_pos_x = -7;
+			raster_pos_y = -8;
 			break;	
 		case 7: // mug
 			camera_parameter_in_out_max = 2.4;
@@ -723,6 +737,8 @@ void set_arena_for_level(int level)
 			camera_look_at_x = 5;
 			camera_look_at_y = 0;
 			camera_look_at_z = 4;
+			raster_pos_x = 6;
+			raster_pos_y = 20;
 			break;
 		case 8: // gameboy
 			camera_parameter_in_out_max = 2.8;
@@ -732,8 +748,21 @@ void set_arena_for_level(int level)
 			camera_look_at_x = 0;
 			camera_look_at_y = 0;
 			camera_look_at_z = 4;
+			raster_pos_x = -16;
+			raster_pos_y = -6;
 			break;
-		case 9: // deer
+		case 9: // ghost
+			camera_parameter_in_out_max = 2.8;
+			camera_stops_at_x = 26;
+			camera_stops_at_y = 25;
+			camera_stops_at_z = 50;
+			camera_look_at_x = 1;
+			camera_look_at_y = 0;
+			camera_look_at_z = 4;
+			raster_pos_x = -12;
+			raster_pos_y = -6;
+			break;
+		case 10: // deer
 			camera_parameter_in_out_max = 2.8;
 			camera_stops_at_x = 26;
 			camera_stops_at_y = 25;
@@ -741,8 +770,10 @@ void set_arena_for_level(int level)
 			camera_look_at_x = 0.5;
 			camera_look_at_y = 0;
 			camera_look_at_z = 4;
+			raster_pos_x = -16;
+			raster_pos_y = -6;
 			break;
-		case 10: // CHICKEN
+		case 11: // CHICKEN
 			is_final_level = 1;
 			camera_parameter_in_out_max = 3.2;
 			camera_stops_at_x = 30;
@@ -751,6 +782,8 @@ void set_arena_for_level(int level)
 			camera_look_at_x = 3;
 			camera_look_at_y = 0;
 			camera_look_at_z = 3;
+			raster_pos_x = -25;
+			raster_pos_y = -10;
 			break;
 	}
 	
