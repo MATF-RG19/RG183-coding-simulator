@@ -139,7 +139,16 @@ void draw_girl()
 	}	
 	
 	GLfloat mat_ambient[] ={ 0.7, 0.0, 0.2, 1.0f };
+	
+	// GLfloat mat_ambient[] ={ (float)0/255, (float)59/255, (float)70/255, 1.0f };
+	GLfloat shine[] = { 50 };
+	
 	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
+	/*
+	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_ambient);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_ambient);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, shine);
+	*/
 	
 	if (game_complete)
 	{

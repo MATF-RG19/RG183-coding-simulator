@@ -42,6 +42,10 @@ void draw_triangle_carpet(GLfloat ambient1[4], GLfloat ambient2[4])
 	
 	float triangle_optimization_array[TRIANGLE_OPTIMIZATION_ARRAY_LENGTH];
 	
+	GLfloat shine[] = { 11.264f };
+	
+	glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, shine);
+	
 	int triangle_optimization_array_position = 0;
 	for(x = -60; x < 80; x = x + 4)
 	{
@@ -58,10 +62,12 @@ void draw_triangle_carpet(GLfloat ambient1[4], GLfloat ambient2[4])
 				int group_index;
 				int number_of_groups = 4;
 				int i;
-				// GLfloat mat_ambient_1[] ={ 0.1, 1, 0.1, 1.0f };
+				//GLfloat mat_ambient_1[] ={ 0.1, 1, 0.1, 1.0f };
 				glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient1);
+				//glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, ambient1);
+				//glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, ambient1);
 				
-				// GLfloat mat_ambient_2[] ={ 1, 1, 0.3, 1.0f };
+				//GLfloat mat_ambient_2[] ={ 1, 1, 0.3, 1.0f };
 				
 				for(group_index = 0; group_index < number_of_groups*2; group_index = group_index + 2)
 				{
@@ -69,6 +75,9 @@ void draw_triangle_carpet(GLfloat ambient1[4], GLfloat ambient2[4])
 					if (group_index == number_of_groups)
 					{
 						glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient2);
+						//glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient2);
+						//glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, ambient2);
+						//glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, ambient2);
 					}
 				
 					glPushMatrix();
@@ -122,6 +131,11 @@ void draw_floor()
 	GLfloat mat_ambient_special[] ={ 0.5, 1, 1, 1 };
 	GLfloat mat_diffuse_special[] ={ 0.5, 1, 1, 1 };
 	GLfloat mat_specular_special[] ={ 0.5, 1, 1, 0.922f };
+	
+	//GLfloat mat_diffuse_special[] ={ (float)184/255, (float)255/255, (float)120/255, 1 };
+	//GLfloat mat_ambient_special[] ={ (float)184/255, (float)255/255, (float)120/255, 1 };
+	//GLfloat mat_specular_special[] ={ (float)184/255, (float)255/255, (float)120/255, 1 };
+	
 	GLfloat shine_special[] = { 11.264f };
 	
 	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
@@ -141,6 +155,10 @@ void draw_floor()
     	
     	current_simple_index++;
 	}
+	
+	glPopAttrib();
+	
+	glPushAttrib(GL_LIGHTING_BIT);
 	
 	while (array_special_tiles[current_special_index].x != INT_MAX)
 	{
@@ -215,30 +233,30 @@ void draw_final_level_carpet()
 	GLfloat mat_ambient_special4[] ={ 0.8, 1, 0.8, 1 };
 	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient_special);
 	glBegin(GL_POLYGON);
-		glVertex3f(-20,0,-40);
-		glVertex3f(-20,0,20);
-		glVertex3f(10, 0, -10);
+		glVertex3f(-20, 0, -50.75);
+		glVertex3f(-20, 0, 13);
+		glVertex3f(10, 0, -18.8);
 	glEnd();
 	
 	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient_special2);
 	glBegin(GL_POLYGON);
-		glVertex3f(40, 0, 20);
-		glVertex3f(40,0,-40);
-		glVertex3f(10, 0, -10);
+		glVertex3f(40, 0, 13);
+		glVertex3f(40, 0, -50.75);
+		glVertex3f(10, 0, -18.8);
 	glEnd();
 	
 	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient_special3);
 	glBegin(GL_POLYGON);
-		glVertex3f(-20, 0, 20);
-		glVertex3f(40, 0, 20);
-		glVertex3f(10, 0, -10);
+		glVertex3f(-20, 0, 13);
+		glVertex3f(40, 0, 13);
+		glVertex3f(10, 0, -18.8);
 	glEnd();
 	
 	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient_special4);
 	glBegin(GL_POLYGON);
-		glVertex3f(-20, 0, -40);
-		glVertex3f(40,0,-40);
-		glVertex3f(10, 0, -10);
+		glVertex3f(-20, 0, -50.75);
+		glVertex3f(40, 0,-50);
+		glVertex3f(10, 0, -18.8);
 	glEnd();
 	
 	glPopAttrib();

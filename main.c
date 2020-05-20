@@ -242,7 +242,9 @@ void on_display() {
     if (!is_final_level)
     {
 		GLfloat ambient1[] ={ 0.1, 1, 0.1, 1.0f };
+		//GLfloat ambient1[] ={ (float)140/255, (float)170/255, (float)243/255, 1.0f };
 		GLfloat ambient2[] ={ 1, 1, 0.3, 1.0f };
+		//GLfloat ambient2[] ={ (float)161/255,(float)25/255, (float)34/255, 1.0f };
 		draw_triangle_carpet(ambient1, ambient2);
 	}
 	else 
@@ -270,6 +272,7 @@ void on_display() {
 		/* if the game is still in progress, the tiles and the figure should be drawn */
 		draw_floor();
 		draw_girl(); 
+		draw_special();
 	}
 		 
     glPopMatrix();
