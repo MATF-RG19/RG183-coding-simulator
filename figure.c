@@ -241,6 +241,9 @@ void draw_girl()
 
 void draw_girl_game_complete()
 {
+	float extra_static_rotation = 0;
+	float extra_dynamic_rotation = 0;
+
 	y = 0;
 	head_translation_x = 0;
 	head_translation_y = 0;

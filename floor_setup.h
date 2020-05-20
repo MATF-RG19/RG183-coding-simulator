@@ -21,5 +21,4 @@ void draw_triangle_carpet(GLfloat ambient1[4], GLfloat ambient2[4]);
 void draw_floor();
 void draw_special();
 void draw_final_level_carpet();
-void draw_girl_game_complete();
 #endif

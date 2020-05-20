@@ -318,11 +318,10 @@ void on_keyboard(unsigned char key, int x, int y) {
         	break;  
         case 'C':
         case 'c':
-        	// resetting input
+        	// clear last move
         	if (pressed_enter)
         		break;
-        	current_move_index = 0;
-        	array_of_moves[0] = '\0';
+        	array_of_moves[--current_move_index] = '\0';
         	glutPostRedisplay();
         	break;
         case 'r':

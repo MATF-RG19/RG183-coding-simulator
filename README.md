@@ -12,7 +12,7 @@ Possible moves (relative to the direction the figure is facing at the beginning 
   - D: figure moves right one tile
   - E: activate the current tile the figure is on
   - R: resets the level if it was failed
-  - C: clear the sequence of movements 
+  - C: clear last movement added
   - ENTER (key): figure performs the sequence of movements (WASDE) given
   - The figure must stay on the path (either white or blue tiles), if the figure wanders off, the level is failed
 	
