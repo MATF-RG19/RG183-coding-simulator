@@ -505,7 +505,8 @@ void on_timer(int id) {
     	Then if the level has no been previously failed, we need to check:
     		- whether all of the specials have been actived (level complete)
     		- go to the next level if there is one
-    		- animate the next move in the sequence if the level was neither failed not completed
+   			- animate the next move in the sequence if the level was neither failed not completed
+
     	*/
     	if (animation_ongoing)
 		{
@@ -607,6 +608,8 @@ void on_timer(int id) {
 				char current = array_of_moves[current_move_index];
 				if (current == '\0') 
 				{
+					// previous_pressed_key = current_pressed_key;
+					// sad animation has to play
 					level_failed = 1;
 					animation_ongoing = 1;
 					animation_parameter = 0;
