@@ -35,8 +35,6 @@ void draw_game_complete(void);
 // A special animation plays when the last special tile has been activated on a level
 int last_special_tile_activated = 0;
 
-// TODO jumps for no reason if you don't enter any movement
-
 /* used to keep track of the light source so a small cube acting as a 
    lightbulb can be drawn to more easily see where the light is coming from */
 static int light_x = -4;
@@ -448,7 +446,7 @@ int check_if_off_path(char move)
 	return 1;
 }
 
-// TODO spreci da se desava on oza kamerom zoom in out
+// TODO fix: spreci da se desava ono sa kamerom zoom in out
 void on_timer(int id) {
     
     switch(id)
@@ -509,7 +507,7 @@ void on_timer(int id) {
     	*/
     	if (animation_ongoing)
 		{
-			// handling when the first tile is a special tile and it's activated
+			// handling the "special" case when the first tile is a special tile and it's activated
 			if (array_of_moves[0] == 'e' && animation_parameter == 0 && current_move_index == 0)
 			{
 				int current_special_index = 0;
@@ -523,6 +521,12 @@ void on_timer(int id) {
 					}
 					current_special_index++;
 				} 
+			}
+			
+			// handling the "special" case when no moves have been entered at all
+			if (array_of_moves[0] == '\0' && animation_parameter == 0 && current_move_index == 0)
+			{
+				level_failed = 1;
 			}
 		
 			if (animation_parameter >= 1)
@@ -597,6 +601,7 @@ void on_timer(int id) {
 					animation_parameter = 0;
 					set_arena_for_level(1);
 					glutTimerFunc(TIMER_INTERVAL,on_timer,TIMER_ID_GAME_COMPLETE);
+					is_final_level = 0;
 				}
 				else 
 					set_arena_for_level(++current_level);

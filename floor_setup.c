@@ -208,5 +208,39 @@ void draw_special() // only if e was pressed on a special tile
 
 void draw_final_level_carpet()
 {
+	glPushAttrib(GL_LIGHTING_BIT);
+	GLfloat mat_ambient_special[] ={ 0.5, 1, 1, 1 };
+	GLfloat mat_ambient_special2[] ={ 0.8, 0.8, 1, 1 };
+	GLfloat mat_ambient_special3[] ={ 1, 0.8, 0.8, 1 };
+	GLfloat mat_ambient_special4[] ={ 0.8, 1, 0.8, 1 };
+	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient_special);
+	glBegin(GL_POLYGON);
+		glVertex3f(-20,0,-40);
+		glVertex3f(-20,0,20);
+		glVertex3f(10, 0, -10);
+	glEnd();
+	
+	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient_special2);
+	glBegin(GL_POLYGON);
+		glVertex3f(40, 0, 20);
+		glVertex3f(40,0,-40);
+		glVertex3f(10, 0, -10);
+	glEnd();
+	
+	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient_special3);
+	glBegin(GL_POLYGON);
+		glVertex3f(-20, 0, 20);
+		glVertex3f(40, 0, 20);
+		glVertex3f(10, 0, -10);
+	glEnd();
+	
+	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient_special4);
+	glBegin(GL_POLYGON);
+		glVertex3f(-20, 0, -40);
+		glVertex3f(40,0,-40);
+		glVertex3f(10, 0, -10);
+	glEnd();
+	
+	glPopAttrib();
 }
 
