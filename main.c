@@ -361,6 +361,9 @@ void on_keyboard(unsigned char key, int x, int y) {
     }
 }
 
+/*
+	special seen when the game has been finished
+*/
 void draw_game_complete(void)
 {	
 	glPushAttrib(GL_LIGHTING_BIT);
@@ -408,6 +411,9 @@ void draw_game_complete(void)
 	glPopAttrib();
 }
 
+/*
+	used to check whether the last move didn't end on one of the tiles 
+*/
 int check_if_off_path(char move)
 {
 	int x_to_check = previous_tile_x;
@@ -446,173 +452,155 @@ int check_if_off_path(char move)
 // TODO spreci da se desava on oza kamerom zoom in out
 void on_timer(int id) {
     
-    if (id == TIMER_ID_CAMERA_OUT)
+    switch(id)
     {
-    	if (camera_parameter_in_out >= camera_parameter_in_out_max)
-    		return;
+    	case TIMER_ID_CAMERA_OUT: // camera movement at the beginning of the level (zooming out from the figure)
+			if (camera_parameter_in_out >= camera_parameter_in_out_max)
+				return;
+				
+			camera_parameter_in_out += 0.005;
+			glutTimerFunc(TIMER_INTERVAL, on_timer, TIMER_ID_CAMERA_OUT);
+    		break;
     		
-    	camera_parameter_in_out += 0.005;
-    	glutTimerFunc(TIMER_INTERVAL, on_timer, TIMER_ID_CAMERA_OUT);
-    	
-    }
-    else if (id == TIMER_ID_CAMERA_IN)
-    {
-    	if (camera_parameter_in_out > 0)
-    	{
-			camera_parameter_in_out -= 0.008;
-			glutTimerFunc(TIMER_INTERVAL, on_timer, TIMER_ID_CAMERA_IN);
-    	}
-    	else 
-    	{
-    		animation_ongoing = 1;
-    		animation_parameter = 0;
-    		glutTimerFunc(TIMER_INTERVAL, on_timer, TIMER_ID);
-    	}
-    	
-    }
-    else if (id == TIMER_ID_GAME_COMPLETE)
-    {
-    	if (animation_parameter >= 1)
-    	{	
-    		game_complete_animation_stage++;
-    		if (game_complete_animation_stage == 11)
-    		{
-    			game_complete_animation_stage = 0;
-    		}
-    		animation_parameter = 0;
-    	}
-    	else
-    	{
-    		animation_parameter += 0.02;
-    	}
-    	glutTimerFunc(TIMER_INTERVAL, on_timer, TIMER_ID_GAME_COMPLETE);
-    }
-    else if (animation_ongoing)
-	{
-		// handling when the first tile is a special tile and it's activated
-		if (array_of_moves[0] == 'e' && animation_parameter == 0 && current_move_index == 0)
-		{
-			int current_special_index = 0;
-			while (array_special_tiles[current_special_index].x != INT_MAX)
+    	case TIMER_ID_CAMERA_IN: // camera movement after pressing enter for the first time (zooming in on the figure)
+    		if (camera_parameter_in_out > 0)
 			{
-				special_tile current_special = array_special_tiles[current_special_index];
-				if (current_special.x == -previous_tile_x && current_special.z == -previous_tile_z)
-				{
-					array_special_tiles[current_special_index].activated = 1;
-					is_current_special_activated = 1;
-				}
-				current_special_index++;
-			} 
-			// current_move_index++;
-		}
-	
-		if (animation_parameter >= 1)
-		{
-			if (!level_failed)
-			{
-				animation_parameter = 0;
-				animation_ongoing = 0;
-				if (current_pressed_key != 'e')
-					previous_pressed_key = current_pressed_key;
-				switch(current_pressed_key)
-				{
-					case 'w':
-						previous_tile_z++;
-						break;
-					case 'a':
-						previous_tile_x++;
-						break;
-					case 's':
-						previous_tile_z--;
-						break;
-					case 'd':
-						previous_tile_x--;
-						break;
-				}
-			}
-			
-			animation_parameter = 0;
-			animation_ongoing = 0;
-			
-			is_current_special_activated = 0;
-		}
-		else {
-			if (!level_failed)
-			{
-				switch(current_pressed_key)
-				{
-					case 'w':
-						camera_parameter_z += 0.1;
-						break;
-					case 'a':
-						camera_parameter_x -= 0.1;
-						break;
-					case 's':
-						camera_parameter_z -= 0.1;
-						break;
-					case 'd':
-						camera_parameter_x += 0.1;
-						break;
-				}
-			}
-			
-			animation_parameter += 0.03;	
-		}
-		
-		glutTimerFunc(TIMER_INTERVAL,on_timer,TIMER_ID);
-	}
-	else if (!level_failed)
-	{
-		if(check_all_specials_activated())
-		{
-			printf("Level Complete!\n");
-			if (is_final_level)
-			{
-				game_complete = 1;
-				animation_parameter = 1;
-				animation_parameter = 0;
-				set_arena_for_level(1);
-				glutTimerFunc(TIMER_INTERVAL,on_timer,TIMER_ID_GAME_COMPLETE);
+				camera_parameter_in_out -= 0.008;
+				glutTimerFunc(TIMER_INTERVAL, on_timer, TIMER_ID_CAMERA_IN);
 			}
 			else 
-				set_arena_for_level(++current_level);
-		}
-		else
-		{
-			current_move_index++;
-			char current = array_of_moves[current_move_index];
-			if (current == '\0') 
 			{
-				// previous_pressed_key = current_pressed_key;
-				// sad animation has to play
-				level_failed = 1;
 				animation_ongoing = 1;
 				animation_parameter = 0;
-				current_pressed_key = '\0';
-				
-				glutTimerFunc(TIMER_INTERVAL,on_timer,TIMER_ID);
+				glutTimerFunc(TIMER_INTERVAL, on_timer, TIMER_ID);
 			}
-			else // w a s d e
-			{
-				if (current == 'e')
+    		break;
+    		
+    	case TIMER_ID_GAME_COMPLETE:   // special animation in case the game has been completed
+       		if (animation_parameter >= 1)
+			{	
+				game_complete_animation_stage++;
+				if (game_complete_animation_stage == 11)
 				{
-					int current_special_index = 0;
-					while (array_special_tiles[current_special_index].x != INT_MAX)
+					game_complete_animation_stage = 0;
+				}
+				animation_parameter = 0;
+			}
+			else
+			{
+				animation_parameter += 0.02;
+			}
+			glutTimerFunc(TIMER_INTERVAL, on_timer, TIMER_ID_GAME_COMPLETE);
+			break;
+			
+    	default: // regular animation
+    	/* 
+    	There are a lot of things that need to be checked when it comes to regular animations.
+    	First thing - whether an animation is currently happening. There's a special case here (in case the tile the level
+    	is started at is a special one, and activated), we need to "manually" activate it. 
+    	
+    	Then we need to check the animation parameter. If it has exceeded 1, we need to change some data and start the next animation,
+    	and handle the case where the previous move has caused a level failed state.
+    	
+    	
+    	*/
+    	if (animation_ongoing)
+		{
+			// handling when the first tile is a special tile and it's activated
+			if (array_of_moves[0] == 'e' && animation_parameter == 0 && current_move_index == 0)
+			{
+				int current_special_index = 0;
+				while (array_special_tiles[current_special_index].x != INT_MAX)
+				{
+					special_tile current_special = array_special_tiles[current_special_index];
+					if (current_special.x == -previous_tile_x && current_special.z == -previous_tile_z)
 					{
-						special_tile current_special = array_special_tiles[current_special_index];
-						if (current_special.x == -previous_tile_x && current_special.z == -previous_tile_z)
-						{
-							array_special_tiles[current_special_index].activated = 1;
-							is_current_special_activated = 1;
-							check_all_specials_activated();
-						}
-						current_special_index++;
-					} 
+						array_special_tiles[current_special_index].activated = 1;
+						is_current_special_activated = 1;
+					}
+					current_special_index++;
+				} 
+			}
+		
+			if (animation_parameter >= 1)
+			{
+				if (!level_failed)
+				{
+					animation_parameter = 0;
+					animation_ongoing = 0;
+					if (current_pressed_key != 'e')
+						previous_pressed_key = current_pressed_key;
+					switch(current_pressed_key)
+					{
+						case 'w':
+							previous_tile_z++;
+							break;
+						case 'a':
+							previous_tile_x++;
+							break;
+						case 's':
+							previous_tile_z--;
+							break;
+						case 'd':
+							previous_tile_x--;
+							break;
+					}
 				}
 				
-				// I don't want to change previous to e, it's supposed to keep track of the last movement 
-				if(check_if_off_path(current_pressed_key))
+				animation_parameter = 0;
+				animation_ongoing = 0;
+				
+				is_current_special_activated = 0;
+			}
+			else {
+				if (!level_failed)
 				{
+					switch(current_pressed_key)
+					{
+						case 'w':
+							camera_parameter_z += 0.1;
+							break;
+						case 'a':
+							camera_parameter_x -= 0.1;
+							break;
+						case 's':
+							camera_parameter_z -= 0.1;
+							break;
+						case 'd':
+							camera_parameter_x += 0.1;
+							break;
+					}
+				}
+				
+				animation_parameter += 0.03;	
+			}
+			
+			glutTimerFunc(TIMER_INTERVAL,on_timer,TIMER_ID);
+		}
+		else if (!level_failed)
+		{
+			if(check_all_specials_activated())
+			{
+				printf("Level Complete!\n");
+				if (is_final_level)
+				{
+					game_complete = 1;
+					animation_parameter = 1;
+					animation_parameter = 0;
+					set_arena_for_level(1);
+					glutTimerFunc(TIMER_INTERVAL,on_timer,TIMER_ID_GAME_COMPLETE);
+				}
+				else 
+					set_arena_for_level(++current_level);
+			}
+			else
+			{
+				current_move_index++;
+				char current = array_of_moves[current_move_index];
+				if (current == '\0') 
+				{
+					// previous_pressed_key = current_pressed_key;
+					// sad animation has to play
 					level_failed = 1;
 					animation_ongoing = 1;
 					animation_parameter = 0;
@@ -620,20 +608,50 @@ void on_timer(int id) {
 					
 					glutTimerFunc(TIMER_INTERVAL,on_timer,TIMER_ID);
 				}
-				else {
-					if (current_pressed_key != 'e')
+				else // w a s d e
+				{
+					if (current == 'e')
 					{
-						previous_pressed_key = current_pressed_key;
+						int current_special_index = 0;
+						while (array_special_tiles[current_special_index].x != INT_MAX)
+						{
+							special_tile current_special = array_special_tiles[current_special_index];
+							if (current_special.x == -previous_tile_x && current_special.z == -previous_tile_z)
+							{
+								array_special_tiles[current_special_index].activated = 1;
+								is_current_special_activated = 1;
+								check_all_specials_activated();
+							}
+							current_special_index++;
+						} 
 					}
 					
-					current_pressed_key = current;
-					animation_ongoing = 1;
-					animation_parameter = 0;
-					glutTimerFunc(TIMER_INTERVAL,on_timer,TIMER_ID);
+					// I don't want to change previous to e, it's supposed to keep track of the last movement 
+					if(check_if_off_path(current_pressed_key))
+					{
+						level_failed = 1;
+						animation_ongoing = 1;
+						animation_parameter = 0;
+						current_pressed_key = '\0';
+						
+						glutTimerFunc(TIMER_INTERVAL,on_timer,TIMER_ID);
+					}
+					else {
+						if (current_pressed_key != 'e')
+						{
+							previous_pressed_key = current_pressed_key;
+						}
+						
+						current_pressed_key = current;
+						animation_ongoing = 1;
+						animation_parameter = 0;
+						glutTimerFunc(TIMER_INTERVAL,on_timer,TIMER_ID);
+					}
 				}
 			}
 		}
-	}
+    	break;
+    }
 	
 	glutPostRedisplay();
 }
