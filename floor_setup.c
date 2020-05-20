@@ -43,9 +43,9 @@ void draw_triangle_carpet(GLfloat ambient1[4], GLfloat ambient2[4])
 	float triangle_optimization_array[TRIANGLE_OPTIMIZATION_ARRAY_LENGTH];
 	
 	int triangle_optimization_array_position = 0;
-	for(x = -70; x < 70; x = x + 4)
+	for(x = -60; x < 80; x = x + 4)
 	{
-		for(z = -70; z < 70; z = z + 4)
+		for(z = -110; z < 40; z = z + 4)
 		{
 			if (index_of_random_array == RANDOM_ARRAY_LENGTH - 4)
 				index_of_random_array = 0;
@@ -204,5 +204,9 @@ void draw_special() // only if e was pressed on a special tile
     glPopMatrix();
     
     glPopAttrib();
+}
+
+void draw_final_level_carpet()
+{
 }
 
