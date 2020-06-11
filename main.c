@@ -7,6 +7,7 @@
 #include <limits.h>
 #include "figure.h"
 #include "floor_setup.h"
+#include "image.h"
 
 // The timer interval is the same for all animations
 #define TIMER_INTERVAL 10
@@ -17,6 +18,10 @@
 // Timer IDs related to camera movement at the beginning of a level)
 #define TIMER_ID_CAMERA_OUT 1
 #define TIMER_ID_CAMERA_IN 2
+
+/* Imena fajlova sa teksturama. */
+#define FILENAME0 "light.bmp"
+#define FILENAME1 "chicken_fire.bmp"
 
 // The timer ID for the game complete animation
 #define TIMER_ID_GAME_COMPLETE 3
@@ -118,6 +123,12 @@ FILE* level_file;
 we don't want to read the next level from the file */
 int level_reset = 0;
 
+/* Kumulativana matrica rotacije. */
+static float matrix[16];
+
+/* Identifikatori tekstura. */
+static GLuint names[2];
+
 
 int main(int argc, char **argv){
     glutInit(&argc, argv);
@@ -165,6 +176,56 @@ int main(int argc, char **argv){
 	}
 	
     glClearColor(0, 0, 0, 0);
+    
+    // Texture related settings below
+    Image * image;
+
+    glEnable(GL_TEXTURE_2D);
+
+    glTexEnvf(GL_TEXTURE_ENV,
+              GL_TEXTURE_ENV_MODE,
+              GL_REPLACE);
+
+    image = image_init(0, 0);
+
+    image_read(image, FILENAME0);
+
+    glGenTextures(2, names);
+
+    glBindTexture(GL_TEXTURE_2D, names[0]);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_WRAP_S, GL_CLAMP);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_WRAP_T, GL_CLAMP);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
+                 image->width, image->height, 0,
+                 GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
+
+    image_read(image, FILENAME1);
+
+    glBindTexture(GL_TEXTURE_2D, names[1]);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
+                 image->width, image->height, 0,
+                 GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    image_done(image);
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glGetFloatv(GL_MODELVIEW_MATRIX, matrix);
+    
     glutMainLoop();
 
 	fclose(level_file);
@@ -249,7 +310,7 @@ void on_display() {
 	}
 	else 
 	{
-		draw_final_level_carpet();
+		// draw_final_level_carpet();
 	}
 	
 	/*
@@ -258,21 +319,20 @@ void on_display() {
 	*/
 	if (game_complete)
 	{
-		GLfloat ambient1[] ={ 1, 1, 1, 1.0f };
-		GLfloat ambient2[] ={ 1, 1, 0.3, 1.0f };
-		draw_triangle_carpet(ambient1, ambient2);
-		draw_game_complete();
 		glPushMatrix();
 			glTranslatef(1, 0, 0);   
 			draw_girl();    
 		glPopMatrix();
+		draw_game_complete();
 	}
 	else 
 	{
 		/* if the game is still in progress, the tiles and the figure should be drawn */
+		
 		draw_floor();
 		draw_girl(); 
 		draw_special();
+		
 	}
 		 
     glPopMatrix();
@@ -362,10 +422,14 @@ void on_keyboard(unsigned char key, int x, int y) {
 }
 
 /*
-	special seen when the game has been finished
+	special scene when the game has been finished
 */
 void draw_game_complete(void)
 {	
+	GLfloat ambient1[] ={ 1, 1, 1, 1.0f };
+	GLfloat ambient2[] ={ 1, 1, 0.3, 1.0f };
+	draw_triangle_carpet(ambient1, ambient2);
+
 	glPushAttrib(GL_LIGHTING_BIT);
 	
 	GLfloat mat_ambient[] ={ 0.24725f, 0.1995f, 0.0745f, 1.0f };
@@ -407,8 +471,30 @@ void draw_game_complete(void)
 		glScalef(0.8, 1, 1);
 		glutSolidTorus(0.1,0.7,32,32);
 	glPopMatrix();
-	
-	glPopAttrib();
+
+	glPushMatrix();
+    glTranslatef(4,3.5,0);
+    glBindTexture(GL_TEXTURE_2D, names[1]);
+		glBegin(GL_QUADS);
+		    glNormal3f(0, 0, 1);
+
+		    glTexCoord2f(0, 0);
+		    glVertex3f(0, 0, 0);
+
+		    glTexCoord2f(1, 0);
+		    glVertex3f(4, 0, 0);
+
+		    glTexCoord2f(1, 1);
+		    glVertex3f(4, 3, 0);
+
+		    glTexCoord2f(0, 1);
+		    glVertex3f(0, 3, 0);
+		glEnd();
+    glPopMatrix();
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+    
+    glPopAttrib();
 }
 
 /*

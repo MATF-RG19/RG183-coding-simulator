@@ -13,9 +13,18 @@ but it's far more readable this way than if I kept it all in one single file.
 #include <ctype.h>
 #include <limits.h>
 #include "floor_setup.h"
+#include "image.h"
+
+
 
 extern int index_of_random_array;
 extern float random_array[RANDOM_ARRAY_LENGTH];
+
+/* Funkcija initalize() vrsi OpenGL inicijalizaciju. */
+static void initialize(void);
+
+/* Kumulativana matrica rotacije. */
+static float matrix[16];
 
 extern int is_current_special_activated, previous_tile_z, previous_tile_x, is_final_level;
 extern int array_of_moves[MAX_NUM_MOVES];
@@ -261,4 +270,5 @@ void draw_final_level_carpet()
 	
 	glPopAttrib();
 }
+
 
