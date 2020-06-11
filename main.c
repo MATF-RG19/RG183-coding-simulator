@@ -96,6 +96,10 @@ int camera_look_at_x = 0;
 int camera_look_at_y = 0;
 int camera_look_at_z = 0;
 
+// used to fix a "bug" where if enter was pressed while the camera was zooming out 
+// the camera would behave "unexpectedly" after moving
+int stop_camera_out = 0;
+
 // pressing the "R" button to reset is allowed only if a level has been failed
 int level_failed = 0;
 
@@ -409,6 +413,7 @@ void on_keyboard(unsigned char key, int x, int y) {
         	pressed_enter = 1;
         	
         	// start at the beginning of the recorded move sequence 
+        	stop_camera_out = 1;
         	current_move_index = 0;
         	current_pressed_key = array_of_moves[current_move_index];
         	
@@ -541,7 +546,7 @@ void on_timer(int id) {
     switch(id)
     {
     	case TIMER_ID_CAMERA_OUT: // camera movement at the beginning of the level (zooming out from the figure)
-			if (camera_parameter_in_out >= camera_parameter_in_out_max)
+			if (camera_parameter_in_out >= camera_parameter_in_out_max || stop_camera_out)
 				return;
 				
 			camera_parameter_in_out += 0.005;
@@ -796,6 +801,7 @@ void set_arena_for_level(int level)
 	is_current_special_activated = 0;
 	level_failed = 0;
 
+	stop_camera_out = 0;
 	animation_parameter = 0;
 	current_pressed_key = '\0';
 	previous_pressed_key = 'w'; // because at the beginning the figure is facing forward
